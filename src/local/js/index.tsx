@@ -1,11 +1,10 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
-import { Snackbar, TextField, IconButton } from 'material-ui';
+import { Snackbar, TextField } from 'material-ui';
 import { configure } from 'mobx';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
 import ReactDOM from 'react-dom';
-import { Settings } from '../../SettingsRepo';
 import Store from './Store';
 
 configure({ enforceActions: true });
@@ -37,30 +36,39 @@ class App extends React.Component<{ store: Store }> {
   render() {
     return (
       <div>
-        <Snackbar
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'center',
-          }}
-          open={this.props.store.latestError != null}
-          onClose={this.onCloseError}
-          autoHideDuration={6000}
-          message={<span>{this.props.store.latestError}</span>}
-        />
-        <TextField
-          label="RTMP Port"
-          type="number"
-          inputProps={{ min: 0, max: 65535 }}
-          value={this.props.store.rtmpPort}
-          onChange={this.onChangeRTMP}
-        />
-        <TextField
-          label="HTTP Port"
-          type="number"
-          inputProps={{ min: 0, max: 65535 }}
-          value={this.props.store.httpPort}
-          onChange={this.onChangeHTTP}
-        />
+        <p>
+          <Snackbar
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'center',
+            }}
+            open={this.props.store.latestError != null}
+            onClose={this.onCloseError}
+            autoHideDuration={6000}
+            message={<span>{this.props.store.latestError}</span>}
+          />
+          <TextField
+            label="RTMP Port"
+            type="number"
+            inputProps={{ min: 0, max: 65535 }}
+            value={this.props.store.rtmpPort}
+            onChange={this.onChangeRTMP}
+          />
+          <TextField
+            label="HTTP Port"
+            type="number"
+            inputProps={{ min: 0, max: 65535 }}
+            value={this.props.store.httpPort}
+            onChange={this.onChangeHTTP}
+          />
+        </p>
+        <p>
+          <TextField
+            label="Listeners"
+            value={this.props.store.listeners}
+            inputProps={{ readOnly: true }}
+          />
+        </p>
       </div>
     );
   }

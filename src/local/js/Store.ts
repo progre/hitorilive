@@ -7,6 +7,7 @@ export default class Store {
   @observable rtmpPort?: number;
   @observable httpPort?: number;
   @observable latestError?: string;
+  @observable listeners = 0;
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
     this.rtmpPort = settings.rtmpPort;
@@ -19,6 +20,10 @@ export default class Store {
 
     ipcRenderer.on('error', action((_: any, value: string) => {
       this.latestError = value;
+    }));
+
+    ipcRenderer.on('setListeners', action((_: any, value: number) => {
+      this.listeners = value;
     }));
   }
 

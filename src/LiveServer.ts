@@ -1,9 +1,31 @@
+import { Subject } from 'rxjs';
 // tslint:disable-next-line:variable-name
 const NodeMediaServer = require('node-media-server');
+// tslint:disable-next-line:no-submodule-imports
+const context = require('node-media-server/node_core_ctx');
 import net from 'net';
 
 export default class LiveServer {
   private nms?: any;
+  listeners = 0;
+
+  onUpdatedListeners = new Subject();
+
+  constructor() {
+    setInterval(
+      () => {
+        const newValue
+          = (<Map<any, any>>context.sessions).size
+          - (<Map<any, any>>context.publishers).size;
+        if (newValue === this.listeners) {
+          return;
+        }
+        this.listeners = newValue;
+        this.onUpdatedListeners.next();
+      },
+      1000,
+    );
+  }
 
   isRunning() {
     return this.nms != null;
@@ -17,8 +39,6 @@ export default class LiveServer {
       });
 
       // monkey patch
-      // tslint:disable-next-line:no-submodule-imports
-      const context = require('node-media-server/node_core_ctx');
       (<Set<any>>context.idlePlayers).clear();
       (<Map<any, any>>context.publishers).clear();
     }

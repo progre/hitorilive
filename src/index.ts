@@ -1,6 +1,6 @@
 // tslint:disable:no-implicit-dependencies
 try { require('source-map-support').install(); } catch (e) { /* NOP */ }
-import electron, { BrowserWindow, IpcMain, WebContents } from 'electron';
+import electron, { IpcMain, WebContents } from 'electron';
 // tslint:enable:no-implicit-dependencies
 import LiveServer from './LiveServer';
 import SettingsRepo, { Settings } from './SettingsRepo';
@@ -17,17 +17,21 @@ class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
-    ipcMain.on('setRTMPPort', (_, value: number) => {
+    ipcMain.on('setRTMPPort', (_: any, value: number) => {
       this.settings.rtmpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
       this.delayUpdateServer();
       this.webContents.send('setSettings', this.settings);
     });
-    ipcMain.on('setHTTPPort', (_, value: number) => {
+    ipcMain.on('setHTTPPort', (_: any, value: number) => {
       this.settings.httpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
       this.delayUpdateServer();
       this.webContents.send('setSettings', this.settings);
+    });
+
+    this.server.onUpdatedListeners.subscribe(() => {
+      this.webContents.send('setListeners', this.server.listeners);
     });
   }
 
