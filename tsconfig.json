@@ -3,6 +3,7 @@
     "declaration": true,
     "declarationDir": "dist",
     "esModuleInterop": true,
+    "experimentalDecorators": true,
     "jsx": "react",
     "lib": [
       "es2017",
@@ -21,6 +22,7 @@
     "target": "es2017"
   },
   "exclude": [
+    "dist",
     "node_modules"
   ]
 }

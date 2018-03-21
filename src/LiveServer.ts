@@ -11,7 +11,16 @@ export default class LiveServer {
 
   async setPort(rtmpPort: number, httpPort: number) {
     if (this.nms != null) {
-      this.nms.close();
+      this.nms.stop();
+      await new Promise((resolve, _) => {
+        setTimeout(resolve, 1000);
+      });
+
+      // monkey patch
+      // tslint:disable-next-line:no-submodule-imports
+      const context = require('node-media-server/node_core_ctx');
+      (<Set<any>>context.idlePlayers).clear();
+      (<Map<any, any>>context.publishers).clear();
     }
     if (!await isFreePort(rtmpPort)) {
       return { error: { reason: `TCP ${rtmpPort} is already assigned.` } };
@@ -34,6 +43,7 @@ export default class LiveServer {
       },
     };
     this.nms = new NodeMediaServer(config);
+    this.nms.run();
 
     // monkey patch
     const onConnect = this.nms.nhs.onConnect.bind(this.nms.nhs);
@@ -48,7 +58,6 @@ export default class LiveServer {
       }
     };
 
-    this.nms.run();
     return {};
   }
 }

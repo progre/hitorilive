@@ -27,7 +27,7 @@ const tsLoader = {
 
 const local = {
   entry: {
-    index: './src/local/js/index.ts'
+    index: './src/local/js/index.tsx'
   },
   externals: /^electron$/,
   module: tsLoader,
