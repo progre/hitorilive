@@ -1,7 +1,5 @@
-import { start } from './player';
-
 async function main() {
-  await start();
+  // NOP
 }
 
 main().catch((e) => { console.error(e.stack || e); });

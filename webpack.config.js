@@ -25,16 +25,16 @@ const tsLoader = {
   }]
 };
 
-const clientSide = {
+const local = {
   entry: {
-    index: './src/public/js/index.ts'
+    index: './src/local/js/index.ts'
   },
   externals: /^electron$/,
   module: tsLoader,
-  output: { filename: 'dist/public/js/[name].js', libraryTarget: 'commonjs2' },
+  output: { filename: 'dist/local/js/[name].js', libraryTarget: 'commonjs2' },
   plugins: [
     new CopyWebpackPlugin(
-      [{ from: 'src/public/', to: 'dist/public/' }],
+      [{ from: 'src/local/', to: 'dist/local/' }],
       { ignore: ['test/', '*.ts', '*.tsx'] },
     ),
     ...(
@@ -48,6 +48,27 @@ const clientSide = {
   target: 'electron-renderer',
 };
 
+const public = {
+  entry: {
+    index: './src/public/js/index.ts'
+  },
+  module: tsLoader,
+  output: { filename: 'dist/public/js/[name].js' },
+  plugins: [
+    new CopyWebpackPlugin(
+      [{ from: 'src/public/', to: 'dist/public/' }],
+      { ignore: ['test/', '*.ts', '*.tsx'] },
+    ),
+    ...(
+      !isProduction ? [] : [
+        new webpack.optimize.UglifyJsPlugin({
+          output: { comments: uglifySaveLicense }
+        })
+      ]
+    )
+  ],
+};
+
 const serverSide = {
   entry: {
     index: './src/index.ts'
@@ -59,6 +80,7 @@ const serverSide = {
 };
 
 module.exports = [
-  { ...common, ...clientSide },
+  { ...common, ...local },
+  { ...common, ...public },
   { ...common, ...serverSide },
 ];

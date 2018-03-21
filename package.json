@@ -1,11 +1,14 @@
 {
-  "name": "typescript-boilerplate",
-  "description": "Boilerplate for TypeScript project.",
-  "version": "1.0.0",
+  "name": "hitorilive",
+  "description": "Live broadcast without any server.",
+  "version": "0.1.0",
   "bugs": {
-    "url": "https://github.com/progre/typescript-boilerplate/issues"
+    "url": "https://github.com/progre/hitorilive/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+    "flv.js": "^1.4.2",
+    "node-media-server": "^1.2.2"
+  },
   "devDependencies": {
     "@commitlint/cli": "^6.1.2",
     "@commitlint/config-conventional": "^6.1.2",
@@ -30,13 +33,13 @@
   "files": [
     "dist"
   ],
-  "homepage": "https://github.com/progre/typescript-boilerplate#readme",
+  "homepage": "https://github.com/progre/hitorilive#readme",
   "license": "MIT",
   "main": "dist/index.js",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/progre/typescript-boilerplate.git"
+    "url": "git+https://github.com/progre/hitorilive.git"
   },
   "scripts": {
     "build": "run-s clean release-build",
