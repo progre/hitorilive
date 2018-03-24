@@ -43,7 +43,7 @@ const local = {
           uglifyOptions: { output: { comments: uglifySaveLicense } },
         }),
       ]
-    )
+    ),
   ],
   target: 'electron-renderer',
 };
@@ -61,11 +61,11 @@ const public = {
     ),
     ...(
       !isProduction ? [] : [
-        new webpack.optimize.UglifyJsPlugin({
-          output: { comments: uglifySaveLicense }
-        })
+        new UglifyJsPlugin({
+          uglifyOptions: { output: { comments: uglifySaveLicense } },
+        }),
       ]
-    )
+    ),
   ],
 };
 
