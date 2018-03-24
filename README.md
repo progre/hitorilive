@@ -1,7 +1,9 @@
 # hitorilive
-[![Build Status](https://travis-ci.org/progre/typescript-boilerplate.svg?branch=master)](https://travis-ci.org/progre/typescript-boilerplate)
+[![Build Status](https://travis-ci.org/progre/hitorilive.svg?branch=master)](https://travis-ci.org/progre/hitorilive)
 
-Live broadcast without any server.
+Live broadcasting without a server for everyone.
+
+* This version is still expermental. You need to do NAT traversal (eg, UPnP) yourself.
 
 ## Usage
 

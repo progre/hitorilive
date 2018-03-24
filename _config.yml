@@ -1,1 +1,11 @@
 theme: jekyll-theme-tactile
+plugins:
+  - jekyll-readme-index
+readme_index:
+  enabled: true
+  remove_originals: false
+lang: en-US
+title: hitorilive
+description: hitorilive makes live broadcasting without a server for everyone.
+favicon: /icon.png
+image_absolute_url: 'https://progre.github.io/hitorilive/icon.png'
