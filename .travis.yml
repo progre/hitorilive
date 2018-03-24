@@ -3,11 +3,22 @@ dist: trusty
 language: node_js
 node_js: 8
 before_script:
-  - sudo rm /etc/apt/sources.list.d/google-chrome.list
-  - sudo dpkg --add-architecture i386
-  - sudo apt-get update
-  - sudo apt-get install -y wine1.6
+- sudo rm /etc/apt/sources.list.d/google-chrome.list
+- sudo dpkg --add-architecture i386
+- sudo apt-get update
+- sudo apt-get install -y wine1.6
 script:
-  - npm run debug-build
-  - npm run build
-  - npm run package
+- npm run debug-build
+- npm run build
+- npm run package
+deploy:
+  provider: releases
+  api_key:
+    secure: lUgVfjaOizqaVhYewr5lM2Ou0/QqYgPPC1pLtcL5Q+1NapGwexBTW9LJ0Le8v3OPahuuaFqd7ZsY13XIksY8h4xueFiwv5umZ5PtwFrMr/g8qrVuTuslRUQcSHJGmu7Mr4sjnvhJeHJSBAict1IXkntWonf9t5g1B/y80DkKzlF3YMBtzj+9yVaNkAtRp21AP98rOilhgks+0S4jcNlmQ3wtD97k7svDHRcnLWZw8OEeVUVRN3dJ3xgxkTZd18TqZU8OJdlnnm67e2azdHPJNuBhXhnvxNvVDFwl/xeGNK5+acxWWJfxbRHPfqaPrB+kSO9oBusrAqm2Iy1YjKdIZQTtoHu5YZfIvWUZA/rJlqpeSQ9JA3ngiAIXX/YeUNOsGgg8X1ftE+uyitKEQN7T81MTQ4XYKpSi5W7PMKw6GTVT/EwBASKUhC8IU6lqXwexEEwKHUxEoOA+rI+LEplDBoBUMfWos42RLLmBXxm1c9iJEQ+k9zJQVaOpvjY89AoTNjKdkgyKKcIpcrMNvgXo6NF0Byt5gQHzUawthD4XL/1rk1P+upy/0iphNoxcTUqpr8mUOSObIt69qPqJ3jLUYJca8xCea/uf5CmCCQy30WHTGHcvLGagTWn1pTTiZVV8domQ2UAxvVKY0aTUzlDrVutAGxROEtYqrgVcGzLEWvI=
+  file:
+    - tmp/hitorilive-mac.zip
+    - tmp/hitorilive-win.zip
+  on:
+    tags: true
+  prerelease: true
+  skip_cleanup: true
