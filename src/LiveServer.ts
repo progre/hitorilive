@@ -59,7 +59,7 @@ export default class LiveServer {
       http: {
         allow_origin: '*',
         port: httpPort,
-        webroot: './dist/public',
+        webroot: `${__dirname}/public`,
       },
     };
     this.nms = new NodeMediaServer(config);
