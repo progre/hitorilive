@@ -50,7 +50,7 @@ const local = {
 
 const public = {
   entry: {
-    index: './src/public/js/index.ts'
+    index: './src/public/js/index.tsx'
   },
   module: tsLoader,
   output: { filename: 'dist/public/js/[name].js' },
