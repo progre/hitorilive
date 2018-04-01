@@ -2,12 +2,13 @@
 try { require('source-map-support').install(); } catch (e) { /* NOP */ }
 import electron, { IpcMain, WebContents } from 'electron';
 // tslint:enable:no-implicit-dependencies
-import LiveServer from './LiveServer';
-import SettingsRepo, { Settings } from './SettingsRepo';
+import Chat from './domains/Chat';
+import ServerUnion from './infrastructures/ServerUnion';
+import SettingsRepo from './infrastructures/SettingsRepo';
+import { Settings } from './types';
 
 class App {
-  private server = new LiveServer();
-  private updateServerTimer?: any;
+  serverUnion = new ServerUnion(new Chat());
 
   constructor(
     ipcMain: IpcMain,
@@ -17,45 +18,26 @@ class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
+    this.serverUnion.onPortError.subscribe(({ reason }) => {
+      this.webContents.send('error', reason);
+    });
+
     ipcMain.on('setRTMPPort', (_: any, value: number) => {
       this.settings.rtmpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
-      this.delayUpdateServer();
+      this.serverUnion.delayUpdateServer({ ...this.settings });
       this.webContents.send('setSettings', this.settings);
     });
     ipcMain.on('setHTTPPort', (_: any, value: number) => {
       this.settings.httpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
-      this.delayUpdateServer();
+      this.serverUnion.delayUpdateServer({ ...this.settings });
       this.webContents.send('setSettings', this.settings);
     });
 
-    this.server.onUpdatedListeners.subscribe(() => {
-      this.webContents.send('setListeners', this.server.listeners);
+    this.serverUnion.onUpdateListeners.subscribe(() => {
+      this.webContents.send('setListeners', this.serverUnion.getListeners());
     });
-  }
-
-  private delayUpdateServer() {
-    if (this.updateServerTimer != null) {
-      clearTimeout(this.updateServerTimer);
-    }
-    this.updateServerTimer = setTimeout(
-      async () => { await this.startServer(); },
-      1000,
-    );
-  }
-
-  async startServer() {
-    if (this.settings.rtmpPort == null || this.settings.httpPort == null) {
-      return;
-    }
-    const { error } = await this.server.setPort(
-      this.settings.rtmpPort,
-      this.settings.httpPort,
-    );
-    if (error != null) {
-      this.webContents.send('error', error.reason);
-    }
   }
 
   handleError(e: Error) {
@@ -86,7 +68,7 @@ async function main() {
 
   win.on('ready-to-show', () => {
     win.show();
-    app.startServer().catch(handleError);
+    app.serverUnion.startServer({ ...settings }).catch(handleError);
   });
   win.loadURL(`file://${__dirname}/local/index.html#${JSON.stringify(settings)}`);
 }

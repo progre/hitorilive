@@ -2,14 +2,10 @@
 import { app } from 'electron';
 import fs from 'fs';
 import util from 'util';
+import { Settings } from '../types';
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
-
-export interface Settings {
-  rtmpPort?: number;
-  httpPort?: number;
-}
 
 export default class SettingsRepo {
   private path = `${app.getPath('userData')}/settings.json`;

@@ -3,6 +3,7 @@
     "@progre/tslint-config"
   ],
   "rules": {
+    "no-http-string": false,
     "no-string-based-set-timeout": false,
     "strict-boolean-expressions": false
   }

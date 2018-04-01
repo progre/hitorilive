@@ -1,7 +1,13 @@
 const flvJS = require('flv.js').default;
 import React, { CSSProperties } from 'react';
 
-export default class Player extends React.Component {
+export interface Props {
+  styles: {
+    container: CSSProperties;
+  };
+}
+
+export default class Player extends React.Component<Props> {
   componentDidMount() {
     start().catch((e) => { console.error(e.stack || e); });
   }
@@ -17,7 +23,7 @@ export default class Player extends React.Component {
       width: '100%',
     };
     return (
-      <div>
+      <div style={{ position: 'relative', ...this.props.styles.container }}>
         <video style={centerCSS} id="video" className="center"></video>
         <div
           style={{

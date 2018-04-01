@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
-import { Settings } from '../../SettingsRepo';
+import { Settings } from '../../types';
 
 export default class Store {
   @observable rtmpPort?: number;
