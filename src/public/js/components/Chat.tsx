@@ -39,12 +39,14 @@ export default class Chat extends React.Component<Props> {
   render() {
     return (
       <article style={{
+        boxSizing: 'border-box',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: 'sans-serif',
-        margin: 20,
-        marginRight: 0,
+        height: '100%',
+        padding: 20,
+        paddingRight: 0,
         ...this.props.styles.container,
       }}>
         <section ref="scroll" style={{

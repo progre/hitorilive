@@ -1,13 +1,16 @@
 const flvJS = require('flv.js').default;
+import Radium from 'radium';
 import React, { CSSProperties } from 'react';
 
 export interface Props {
   styles: {
     container: CSSProperties;
   };
+
+  onClickChat(): void;
 }
 
-export default class Player extends React.Component<Props> {
+export default Radium(class Player extends React.Component<Props> {
   componentDidMount() {
     start().catch((e) => { console.error(e.stack || e); });
   }
@@ -23,25 +26,59 @@ export default class Player extends React.Component<Props> {
       width: '100%',
     };
     return (
-      <div style={{ position: 'relative', ...this.props.styles.container }}>
+      <div style={{
+        userSelect: 'none',
+        position: 'relative',
+        ...this.props.styles.container,
+      }}>
         <video style={centerCSS} id="video" className="center"></video>
         <div
           style={{
             ...centerCSS,
+            color: '#333',
             fontFamily: 'sans-serif',
             fontSize: '64px',
             fontWeight: 'bold',
-            color: '#333',
           }}
           id="no-signal"
           className="center"
         >
           NO SIGNAL
         </div>
-      </div>
+        <div
+          className="center"
+          style={{
+            color: 'white',
+            fontSize: 40,
+            height: '100%',
+            opacity: 0,
+            position: 'absolute',
+            transition: 'opacity 150ms',
+            width: '100%',
+
+            ':hover': {
+              opacity: 1,
+            },
+          }}
+        >
+          <span
+            title="Open / Close chat view"
+            onClick={this.props.onClickChat}
+            style={{
+              bottom: 0,
+              cursor: 'pointer',
+              margin: 20,
+              position: 'absolute',
+              right: 0,
+            }}
+          >
+            🖹
+          </span>
+        </div>
+      </div >
     );
   }
-}
+});
 
 class VideoWrapper {
   constructor(
