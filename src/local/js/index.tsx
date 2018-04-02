@@ -1,6 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { ipcRenderer } from 'electron';
-import { Snackbar, TextField } from 'material-ui';
+import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
 import { configure } from 'mobx';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
@@ -19,6 +19,7 @@ class App extends React.Component<{ store: Store }> {
     this.onChangeRTMP = this.onChangeRTMP.bind(this);
     this.onChangeHTTP = this.onChangeHTTP.bind(this);
     this.onCloseError = this.onCloseError.bind(this);
+    this.onCheckUpnp = this.onCheckUpnp.bind(this);
   }
 
   onChangeRTMP(e: ChangeEvent<HTMLInputElement>) {
@@ -33,10 +34,14 @@ class App extends React.Component<{ store: Store }> {
     this.props.store.clearError();
   }
 
+  onCheckUpnp(e: ChangeEvent<HTMLInputElement>) {
+    this.props.store.setUseUpnpPortMapping(e.target.checked);
+  }
+
   render() {
     return (
       <div>
-        <p>
+        <div>
           <Snackbar
             anchorOrigin={{
               vertical: 'top',
@@ -61,14 +66,26 @@ class App extends React.Component<{ store: Store }> {
             value={this.props.store.httpPort}
             onChange={this.onChangeHTTP}
           />
-        </p>
-        <p>
+        </div>
+        <div>
+          <FormControlLabel
+            control={
+              <Checkbox
+                color="primary"
+                checked={this.props.store.useUpnp}
+                onChange={this.onCheckUpnp}
+              />
+            }
+            label="Use UPnP port mapping"
+          />
+        </div>
+        <div>
           <TextField
             label="Listeners"
             value={this.props.store.listeners}
             inputProps={{ readOnly: true }}
           />
-        </p>
+        </div>
       </div>
     );
   }

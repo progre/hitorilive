@@ -5,19 +5,19 @@ import Chat from '../domains/Chat';
 
 export default class HTTPServer {
   private server?: http.Server;
-  private proxy = httpProxy.createProxyServer();
+  private readonly proxy = httpProxy.createProxyServer();
+  port = 0;
 
   constructor(
     private chat: Chat,
   ) {
   }
 
-  async setPort(port: number, httpMediaServerPort: number) {
-    if (this.server != null) {
-      await new Promise((resolve, reject) => {
-        this.server!.close(resolve);
-      });
-    }
+  isRunning() {
+    return this.server != null;
+  }
+
+  async startServer(port: number, httpMediaServerPort: number) {
     this.server = http.createServer((req, res) => {
       if (req.url!.startsWith('/api/v1/')) {
         this.handleAPIRequest(req, res);
@@ -38,7 +38,16 @@ export default class HTTPServer {
         { target: `ws://127.0.0.1:${httpMediaServerPort}` },
       );
     });
-    this.server.listen(port);
+    await new Promise((resolve, reject) => {
+      this.server!.listen(port, resolve);
+    });
+    this.port = port;
+  }
+
+  async stopServer() {
+    await new Promise((resolve, reject) => {
+      this.server!.close(resolve);
+    });
   }
 
   private handleAPIRequest(

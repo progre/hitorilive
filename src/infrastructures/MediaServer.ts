@@ -4,10 +4,6 @@ import { Subject } from 'rxjs';
 const NodeMediaServer = require('node-media-server');
 // tslint:disable-next-line:no-submodule-imports
 const context = require('node-media-server/node_core_ctx');
-import net from 'net';
-
-export class PortError extends Error {
-}
 
 export default class MediaServer {
   private nms?: any;
@@ -35,20 +31,7 @@ export default class MediaServer {
     return this.nms != null;
   }
 
-  /**
-   * @throws PortError
-   */
-  async setRTMPPort(rtmpPort: number) {
-    if (this.nms != null) {
-      await this.stopServer();
-    }
-    if (!await isFreePort(rtmpPort)) {
-      throw new PortError(`TCP ${rtmpPort} is already assigned.`);
-    }
-    return this.startServer(rtmpPort);
-  }
-
-  private async startServer(rtmpPort: number) {
+  async startServer(rtmpPort: number) {
     const config = {
       rtmp: {
         port: rtmpPort,
@@ -83,7 +66,7 @@ export default class MediaServer {
     return { httpPort: httpServer.address().port };
   }
 
-  private async stopServer() {
+  async stopServer() {
     this.nms.stop();
     this.nms = null;
     await new Promise((resolve, _) => {
@@ -110,18 +93,4 @@ function monkeyPatchForReload(nms: any) {
       throw e;
     }
   };
-}
-
-async function isFreePort(port: number) {
-  return new Promise<boolean>((resolve, reject) => {
-    const conn = net.connect(port);
-    conn.on('connect', () => {
-      conn.destroy();
-      resolve(false);
-    });
-    conn.on('error', () => {
-      conn.destroy();
-      resolve(true);
-    });
-  });
 }

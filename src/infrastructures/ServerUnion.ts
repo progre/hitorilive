@@ -1,19 +1,24 @@
+import net from 'net';
 import { Subject } from 'rxjs';
 import Chat from '../domains/Chat';
 import { Settings } from '../types';
 import HTTPServer from './HTTPServer';
-import MediaServer, { PortError } from './MediaServer';
+import MediaServer from './MediaServer';
+import Upnp, { PortAlreadyAssignedError } from './Upnp';
 
 export default class ServerUnion {
-  private readonly httpServer = new HTTPServer(new Chat());
+  private readonly httpServer: HTTPServer;
   private readonly mediaServer = new MediaServer();
+  private readonly upnp: Upnp;
   private updateServerTimer?: any;
+  private serverStarting = false;
 
   readonly onUpdateListeners: Subject<{}> = this.mediaServer.onUpdateListeners;
-  readonly onPortError = new Subject<{ reason: string }>();
+  readonly error = new Subject<{ reason: string }>();
 
-  constructor(chat: Chat) {
+  constructor(chat: Chat, upnpDescription: string) {
     this.httpServer = new HTTPServer(chat);
+    this.upnp = new Upnp(upnpDescription);
   }
 
   getListeners() {
@@ -25,26 +30,81 @@ export default class ServerUnion {
       clearTimeout(this.updateServerTimer);
     }
     this.updateServerTimer = setTimeout(
-      async () => { await this.startServer(settings); },
+      async () => {
+        if (this.serverStarting) {
+          this.delayUpdateServer(settings);
+          return;
+        }
+        this.serverStarting = true;
+        await this.startServer(settings);
+        this.serverStarting = false;
+      },
       1000,
     );
   }
 
+  isRunning() {
+    return this.mediaServer.isRunning() && this.httpServer.isRunning();
+  }
+
   async startServer(settings: Settings) {
-    if (settings.rtmpPort == null || settings.httpPort == null) {
+    await this.closeServer(settings.useUpnp);
+
+    if (!await isFreePort(settings.rtmpPort)) {
+      this.error.next({ reason: `TCP ${settings.rtmpPort} is already assigned.` });
       return;
     }
-    try {
-      const { httpPort } = await this.mediaServer.setRTMPPort(
-        settings.rtmpPort,
-      );
-      await this.httpServer.setPort(settings.httpPort, httpPort);
-    } catch (e) {
-      if (e instanceof PortError) {
-        this.onPortError.next({ reason: e.message });
-        return;
+    if (!await isFreePort(settings.httpPort)) {
+      this.error.next({ reason: `TCP ${settings.httpPort} is already assigned.` });
+      return;
+    }
+    if (settings.useUpnp) {
+      try {
+        await this.upnp.open(settings.httpPort);
+      } catch (e) {
+        if (e instanceof PortAlreadyAssignedError) {
+          this.error.next({ reason: `UPnP port mapping (TCP ${settings.httpPort}) failed.` });
+          return;
+        }
+        console.error(e.stack || e);
+        this.error.next(e.message);
       }
-      throw e;
+    }
+    const { httpPort } = await this.mediaServer.startServer(
+      settings.rtmpPort,
+    );
+    await this.httpServer.startServer(settings.httpPort, httpPort);
+  }
+
+  async closeServer(useUpnp: boolean) {
+    if (this.mediaServer.isRunning()) {
+      await this.mediaServer.stopServer();
+    }
+    if (this.httpServer.isRunning()) {
+      const oldHTTPPort = this.httpServer.port;
+      await this.httpServer.stopServer();
+      if (useUpnp) {
+        try {
+          await this.upnp.close(oldHTTPPort);
+        } catch (e) {
+          console.error(e.stack || e);
+          this.error.next(e.message);
+        }
+      }
     }
   }
+}
+
+async function isFreePort(port: number) {
+  return new Promise<boolean>((resolve, reject) => {
+    const conn = net.connect(port);
+    conn.on('connect', () => {
+      conn.destroy();
+      resolve(false);
+    });
+    conn.on('error', () => {
+      conn.destroy();
+      resolve(true);
+    });
+  });
 }

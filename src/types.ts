@@ -5,6 +5,7 @@ export interface Message {
 }
 
 export interface Settings {
-  rtmpPort?: number;
-  httpPort?: number;
+  rtmpPort: number;
+  httpPort: number;
+  useUpnp: boolean;
 }

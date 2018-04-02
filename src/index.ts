@@ -8,7 +8,7 @@ import SettingsRepo from './infrastructures/SettingsRepo';
 import { Settings } from './types';
 
 class App {
-  serverUnion = new ServerUnion(new Chat());
+  serverUnion = new ServerUnion(new Chat(), 'HitoriLive');
 
   constructor(
     ipcMain: IpcMain,
@@ -18,7 +18,7 @@ class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
-    this.serverUnion.onPortError.subscribe(({ reason }) => {
+    this.serverUnion.error.subscribe(({ reason }) => {
       this.webContents.send('error', reason);
     });
 
@@ -34,13 +34,27 @@ class App {
       this.serverUnion.delayUpdateServer({ ...this.settings });
       this.webContents.send('setSettings', this.settings);
     });
+    ipcMain.on('setUseUpnpPortMapping', (_: any, value: boolean) => {
+      this.settings.useUpnp = value;
+      this.settingsRepo.set(this.settings).catch(this.handleError);
+
+      this.webContents.send('setSettings', this.settings);
+    });
 
     this.serverUnion.onUpdateListeners.subscribe(() => {
       this.webContents.send('setListeners', this.serverUnion.getListeners());
     });
   }
 
-  handleError(e: Error) {
+  isRunning() {
+    return this.serverUnion.isRunning();
+  }
+
+  async close() {
+    await this.serverUnion.closeServer(this.settings.useUpnp);
+  }
+
+  private handleError(e: Error) {
     console.error(e.stack || e);
     this.webContents.send('error', e.message || e);
   }
@@ -65,6 +79,17 @@ async function main() {
     settingsRepo,
     settings,
   );
+  electron.app.on('before-quit', async (e) => {
+    if (!app.isRunning()) {
+      return;
+    }
+    e.preventDefault();
+    try {
+      await app.close();
+    } finally {
+      electron.app.quit();
+    }
+  });
 
   win.on('ready-to-show', () => {
     win.show();

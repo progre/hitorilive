@@ -10,15 +10,20 @@ const writeFile = util.promisify(fs.writeFile);
 export default class SettingsRepo {
   private path = `${app.getPath('userData')}/settings.json`;
 
-  async get() {
-    try {
-      return <Settings>JSON.parse(await readFile(this.path, { encoding: 'utf8' }));
-    } catch {
-      return {
-        rtmpPort: 1935,
-        httpPort: 17144,
-      };
-    }
+  async get(): Promise<Settings> {
+    const rawJSON = await readFile(this.path, { encoding: 'utf8' });
+    const json = (() => {
+      try {
+        return JSON.parse(rawJSON);
+      } catch {
+        return {};
+      }
+    })();
+    return {
+      rtmpPort: json.rtmpPort != null ? json.rtmpPort : 1935,
+      httpPort: json.httpPort != null ? json.httpPort : 17144,
+      useUpnp: json.useUpnp != null ? json.useUpnp : true,
+    };
   }
 
   async set(data: Settings) {

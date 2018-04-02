@@ -1,4 +1,4 @@
-# hitorilive
+# HitoriLive
 [![Build Status](https://travis-ci.org/progre/hitorilive.svg?branch=master)](https://travis-ci.org/progre/hitorilive)
 
 Live broadcasting without a server for everyone.
@@ -7,7 +7,7 @@ Live broadcasting without a server for everyone.
 
 ## Usage
 
-1. Execute hitorilive first
+1. Execute # HitoriLive first
 2. Set RTMP port (to connect from OBS) and set HTTP port (to connect from browser)
 3. Start OBS broadcast to `rtmp://localhost:[set RTMP port]/live`
 4. Open `http://[your ip address]:[set HTTP port]/` in browser of you or your friends

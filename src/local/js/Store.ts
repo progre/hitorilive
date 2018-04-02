@@ -6,16 +6,19 @@ import { Settings } from '../../types';
 export default class Store {
   @observable rtmpPort?: number;
   @observable httpPort?: number;
+  @observable useUpnp?: boolean;
   @observable latestError?: string;
   @observable listeners = 0;
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
     this.rtmpPort = settings.rtmpPort;
     this.httpPort = settings.httpPort;
+    this.useUpnp = settings.useUpnp;
 
     ipcRenderer.on('setSettings', action((_: any, value: Settings) => {
       this.rtmpPort = value.rtmpPort;
       this.httpPort = value.httpPort;
+      this.useUpnp = value.useUpnp;
     }));
 
     ipcRenderer.on('error', action((_: any, value: string) => {
@@ -33,6 +36,10 @@ export default class Store {
 
   setHTTPPort(value: number) {
     this.ipcRenderer.send('setHTTPPort', value);
+  }
+
+  setUseUpnpPortMapping(value: boolean) {
+    this.ipcRenderer.send('setUseUpnpPortMapping', value);
   }
 
   @action clearError() {

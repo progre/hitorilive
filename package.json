@@ -11,6 +11,7 @@
     "material-ui": "^1.0.0-beta.39",
     "mobx": "^4.1.1",
     "mobx-react": "^5.0.0",
+    "nat-upnp": "^1.1.1",
     "node-media-server": "^1.2.6",
     "radium": "^0.24.0",
     "react": "^16.2.0",
