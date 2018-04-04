@@ -1,14 +1,6 @@
-const flvJS = require('flv.js').default;
+import flvJS from 'flv.js';
 import React, { CSSProperties } from 'react';
 import styled from 'styled-components';
-
-export interface Props {
-  styles: {
-    container: CSSProperties;
-  };
-
-  onClickChat(): void;
-}
 
 const ControllerWrapper = styled.div`
   opacity: 0;
@@ -19,51 +11,80 @@ const ControllerWrapper = styled.div`
   }
 `;
 
-export default class Player extends React.Component<Props> {
+const centerCSS: CSSProperties = {
+  alignItems: 'center',
+  display: 'flex',
+  height: '100%',
+  justifyContent: 'center',
+  position: 'absolute',
+  top: 0,
+  width: '100%',
+};
+
+export interface Props {
+  styles: {
+    container: CSSProperties;
+  };
+
+  onClickChat(): void;
+}
+
+export const initialState = {
+  playing: false,
+};
+
+export default class Player extends React.Component<Props, typeof initialState> {
+  constructor(props: any, context?: any) {
+    super(props, context);
+    this.onLoadedMetadata = this.onLoadedMetadata.bind(this);
+    this.onEmptied = this.onEmptied.bind(this);
+    this.state = initialState;
+  }
+
   componentDidMount() {
-    start().catch((e) => { console.error(e.stack || e); });
+    const video = document.getElementById('video') as HTMLVideoElement;
+    video.volume = 0.5;
+    start(video).catch((e) => { console.error(e.stack || e); });
+  }
+
+  onLoadedMetadata() {
+    this.setState({ ...this.state, playing: true });
+  }
+
+  onEmptied() {
+    this.setState({ ...this.state, playing: false });
   }
 
   render() {
-    const centerCSS: CSSProperties = {
-      alignItems: 'center',
-      display: 'flex',
-      height: '100%',
-      justifyContent: 'center',
-      position: 'absolute',
-      top: 0,
-      width: '100%',
-    };
     return (
       <div style={{
         userSelect: 'none',
         position: 'relative',
         ...this.props.styles.container,
       }}>
-        <video style={centerCSS} id="video" className="center"></video>
-        <div
-          style={{
-            ...centerCSS,
-            color: '#333',
-            fontFamily: 'sans-serif',
-            fontSize: '64px',
-            fontWeight: 'bold',
-          }}
-          id="no-signal"
-          className="center"
-        >
+        <video
+          style={centerCSS}
+          id="video"
+          onLoadedMetadata={this.onLoadedMetadata}
+          onEmptied={this.onEmptied}
+        ></video>
+        <div style={{
+          ...centerCSS,
+          color: '#333',
+          display: this.state.playing ? 'none' : 'flex',
+          fontFamily: 'sans-serif',
+          fontSize: '64px',
+          fontWeight: 'bold',
+        }}>
           NO SIGNAL
         </div>
-        <ControllerWrapper
-          className="center"
-          style={{
-            color: 'white',
-            fontSize: 40,
-            height: '100%',
-            position: 'absolute',
-            width: '100%',
-          }}
-        >
+        <ControllerWrapper style={{
+          color: 'white',
+          fontSize: 40,
+          height: '100%',
+          position: 'absolute',
+          width: '100%',
+        }}>
           <span
             title="Open / Close chat view"
             onClick={this.props.onClickChat}
@@ -75,7 +96,7 @@ export default class Player extends React.Component<Props> {
               right: 0,
             }}
           >
-            🖹
+            📝
           </span>
         </ControllerWrapper>
       </div >
@@ -83,39 +104,9 @@ export default class Player extends React.Component<Props> {
   }
 }
 
-class VideoWrapper {
-  constructor(
-    window: Window,
-    video: HTMLVideoElement,
-    private noSignalBlock: HTMLDivElement,
-  ) {
-    this.onPlay = this.onPlay.bind(this);
-    this.onStop = this.onStop.bind(this);
-
-    video.volume = 0.5;
-    video.addEventListener('loadedmetadata', this.onPlay);
-    video.addEventListener('emptied', this.onStop);
-  }
-
-  private onPlay() {
-    this.noSignalBlock.style.display = 'none';
-  }
-
-  private onStop() {
-    this.noSignalBlock.style.display = 'flex';
-  }
-}
-
-async function start() {
-  const video = document.getElementById('video') as HTMLVideoElement;
-  // tslint:disable-next-line:no-unused-expression
-  new VideoWrapper(
-    window,
-    document.getElementById('video') as HTMLVideoElement,
-    document.getElementById('no-signal') as HTMLDivElement,
-  );
+async function start(element: HTMLVideoElement) {
   for (; ;) {
-    await startPlayer(video, location.host);
+    await startPlayer(element, location.host);
   }
 }
 
@@ -127,9 +118,11 @@ async function startPlayer(element: HTMLVideoElement, host: string) {
   });
   flvPlayer.attachMediaElement(element);
   flvPlayer.load();
-  await new Promise((resolve, reject) => {
-    flvPlayer.play();
-    flvPlayer.on(flvJS.Events.LOADING_COMPLETE, resolve);
-  });
+  await Promise.all([
+    flvPlayer.play(),
+    new Promise((resolve, reject) => {
+      flvPlayer.on(flvJS.Events.LOADING_COMPLETE, resolve);
+    }),
+  ]);
   flvPlayer.destroy();
 }
