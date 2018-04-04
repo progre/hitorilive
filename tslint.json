@@ -5,6 +5,11 @@
   "rules": {
     "no-http-string": false,
     "no-string-based-set-timeout": false,
-    "strict-boolean-expressions": false
+    "strict-boolean-expressions": false,
+    "variable-name": [
+      true,
+      "check-format",
+      "allow-pascal-case"
+    ]
   }
 }

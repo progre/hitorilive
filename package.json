@@ -13,10 +13,10 @@
     "mobx-react": "^5.0.0",
     "nat-upnp": "^1.1.1",
     "node-media-server": "^1.2.6",
-    "radium": "^0.24.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "rxjs": "^5.5.8",
+    "styled-components": "^3.2.5",
     "uid-safe": "^2.1.5"
   },
   "devDependencies": {
@@ -26,7 +26,6 @@
     "@progre/tslint-config": "~5.9.0",
     "@types/http-proxy": "^1.16.0",
     "@types/node": "^8.10.1",
-    "@types/radium": "^0.18.24",
     "@types/react": "^16.1.0",
     "@types/react-dom": "^16.0.4",
     "@types/uid-safe": "^2.1.1",

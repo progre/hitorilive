@@ -1,6 +1,6 @@
 const flvJS = require('flv.js').default;
-import Radium from 'radium';
 import React, { CSSProperties } from 'react';
+import styled from 'styled-components';
 
 export interface Props {
   styles: {
@@ -10,7 +10,16 @@ export interface Props {
   onClickChat(): void;
 }
 
-export default Radium(class Player extends React.Component<Props> {
+const ControllerWrapper = styled.div`
+  opacity: 0;
+  transition: opacity 150ms;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+export default class Player extends React.Component<Props> {
   componentDidMount() {
     start().catch((e) => { console.error(e.stack || e); });
   }
@@ -45,20 +54,14 @@ export default Radium(class Player extends React.Component<Props> {
         >
           NO SIGNAL
         </div>
-        <div
+        <ControllerWrapper
           className="center"
           style={{
             color: 'white',
             fontSize: 40,
             height: '100%',
-            opacity: 0,
             position: 'absolute',
-            transition: 'opacity 150ms',
             width: '100%',
-
-            ':hover': {
-              opacity: 1,
-            },
           }}
         >
           <span
@@ -74,11 +77,11 @@ export default Radium(class Player extends React.Component<Props> {
           >
             🖹
           </span>
-        </div>
+        </ControllerWrapper>
       </div >
     );
   }
-});
+}
 
 class VideoWrapper {
   constructor(
