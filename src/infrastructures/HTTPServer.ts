@@ -45,9 +45,13 @@ export default class HTTPServer {
   }
 
   async stopServer() {
-    await new Promise((resolve, reject) => {
-      this.server!.close(resolve);
-    });
+    await Promise.race([
+      new Promise((resolve, reject) => {
+        this.server!.close(resolve); // close isn't finish when client is connecting.
+        this.server = undefined;
+      }),
+      new Promise((resolve, reject) => { setTimeout(resolve, 3000); }),
+    ]);
   }
 
   private handleAPIRequest(

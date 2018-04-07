@@ -12,7 +12,15 @@ export default class MediaServer {
   onUpdateListeners = new Subject();
 
   constructor() {
-    setInterval(() => { this.checkListeners(); }, 1000);
+    setInterval(
+      () => {
+        if (!this.isRunning()) {
+          return;
+        }
+        this.checkListeners();
+      },
+      1000,
+    );
   }
 
   private checkListeners() {
@@ -69,6 +77,8 @@ export default class MediaServer {
   async stopServer() {
     this.nms.stop();
     this.nms = null;
+    this.listeners = 0;
+    this.onUpdateListeners.next();
     await new Promise((resolve, _) => {
       setTimeout(resolve, 1000);
     });
