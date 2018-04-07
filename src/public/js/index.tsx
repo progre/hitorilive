@@ -1,6 +1,7 @@
 import { configure } from 'mobx';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { sync as uid } from 'uid-safe';
 import { Message } from '../../types';
 import Root from './components/Root';
 import API from './infrastructures/API';
@@ -31,7 +32,7 @@ class App extends React.Component<{}, State> {
   }
 
   private onPost(e: { message: string }) {
-    this.api.postMessage(e.message).catch(handleError);
+    this.api.postMessage({ id: uid(16), message: e.message }).catch(handleError);
   }
 
   render() {

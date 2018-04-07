@@ -1,7 +1,8 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
-import { Settings } from '../../types';
+import { sync as uid } from 'uid-safe';
+import { Message, Settings } from '../../types';
 
 export default class Store {
   @observable rtmpPort?: number;
@@ -9,6 +10,9 @@ export default class Store {
   @observable useUpnp?: boolean;
   @observable latestError?: string;
   @observable listeners = 0;
+  @observable chat = {
+    messages: <ReadonlyArray<Message>>[],
+  };
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
     this.rtmpPort = settings.rtmpPort;
@@ -28,6 +32,21 @@ export default class Store {
     ipcRenderer.on('setListeners', action((_: any, value: number) => {
       this.listeners = value;
     }));
+
+    ipcRenderer.on('addMessage', action((_: any, message: Message) => {
+      const currentMessages = this.chat.messages;
+      if (currentMessages.some(x => x.id === message.id)) {
+        return;
+      }
+      const newMessages = [
+        ...currentMessages,
+        message,
+      ].slice(-1000); // limit 1000
+      this.chat = {
+        ...this.chat,
+        messages: newMessages,
+      };
+    }));
   }
 
   setRTMPPort(value: number) {
@@ -44,5 +63,9 @@ export default class Store {
 
   @action clearError() {
     this.latestError = undefined;
+  }
+
+  postMessage(message: string) {
+    this.ipcRenderer.send('addMessage', { message, id: uid(16) });
   }
 }

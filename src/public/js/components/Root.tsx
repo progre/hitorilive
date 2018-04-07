@@ -1,5 +1,5 @@
 import React from 'react';
-import Chat from './Chat';
+import Chat from '../../../commons/components/Chat';
 import Player from './Player';
 
 export interface Props {

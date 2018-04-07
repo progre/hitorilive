@@ -1,16 +1,12 @@
 import { Observable } from 'rxjs';
-import { sync as uid } from 'uid-safe';
 import { Message } from '../../../types';
 
 export default class API {
-  async postMessage(message: string) {
+  async postMessage(messageData: { id: string; message: string }) {
     await fetch(
       '/api/v1/messages',
       {
-        body: JSON.stringify({
-          id: uid(16),
-          message: message.replace(/\r/, ''),
-        }),
+        body: JSON.stringify(messageData),
         cache: 'no-cache',
         headers: { 'content-type': 'application/json' },
         method: 'POST',

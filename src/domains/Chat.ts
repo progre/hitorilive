@@ -9,6 +9,7 @@ export default class Chat {
   addMessage(message: { id: string; message: string }) {
     const newMessage = {
       ...message,
+      message: message.message.replace(/\r/g, ''),
       index: (
         this.messages.length === 0
           ? 0

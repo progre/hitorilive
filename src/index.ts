@@ -8,7 +8,8 @@ import SettingsRepo from './infrastructures/SettingsRepo';
 import { Settings } from './types';
 
 class App {
-  serverUnion = new ServerUnion(new Chat(), 'HitoriLive');
+  private chat = new Chat();
+  serverUnion = new ServerUnion(this.chat, 'HitoriLive');
 
   constructor(
     ipcMain: IpcMain,
@@ -39,6 +40,13 @@ class App {
       this.settingsRepo.set(this.settings).catch(this.handleError);
 
       this.webContents.send('setSettings', this.settings);
+    });
+    ipcMain.on('addMessage', (_: any, value: { id: string, message: string }) => {
+      this.chat.addMessage(value);
+    });
+
+    this.chat.onMessage.subscribe((message) => {
+      this.webContents.send('addMessage', message);
     });
 
     this.serverUnion.onUpdateListeners.subscribe(() => {
