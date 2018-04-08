@@ -1,3 +1,18 @@
+<a name="0.4.0"></a>
+# [0.4.0](https://github.com/progre/hitorilive/compare/0.3.0...0.4.0) (2018-04-08)
+
+
+### Bug Fixes
+
+* fix panic when quit ([74c2739](https://github.com/progre/hitorilive/commit/74c2739))
+
+
+### Features
+
+* add broadcaster chat viewer ([ac1910c](https://github.com/progre/hitorilive/commit/ac1910c))
+
+
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/progre/hitorilive/compare/0.2.0...0.3.0) (2018-04-02)
 
