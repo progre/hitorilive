@@ -1,12 +1,17 @@
 import http from 'http';
 import httpProxy from 'http-proxy';
-import { Observable } from 'rxjs';
+import net from 'net';
+import { Observable, Subject } from 'rxjs';
+import WebSocket from 'ws';
 import Chat from '../domains/Chat';
 
 export default class HTTPServer {
   private server?: http.Server;
   private readonly proxy = httpProxy.createProxyServer();
+  private readonly webSocketServer = new WebSocket.Server({ noServer: true });
   port = 0;
+
+  readonly onJoin = new Subject<WebSocket>();
 
   constructor(
     private chat: Chat,
@@ -18,6 +23,7 @@ export default class HTTPServer {
   }
 
   async startServer(port: number, httpMediaServerPort: number) {
+    const mediaServerHost = `127.0.0.1:${httpMediaServerPort}`;
     this.server = http.createServer((req, res) => {
       if (req.url!.startsWith('/api/v1/')) {
         this.handleAPIRequest(req, res);
@@ -26,17 +32,18 @@ export default class HTTPServer {
       this.proxy.web(
         req,
         res,
-        { target: `http://127.0.0.1:${httpMediaServerPort}` },
+        { target: `http://${mediaServerHost}` },
         (err) => { console.error(err.stack || err); },
       );
     });
-    this.server.on('upgrade', (req, socket, head) => {
-      this.proxy.ws(
-        req,
-        socket,
-        head,
-        { target: `ws://127.0.0.1:${httpMediaServerPort}` },
-      );
+    this.server.on('upgrade', (req: http.IncomingMessage, socket: net.Socket, head: Buffer) => {
+      if (req.url === '/join') {
+        this.webSocketServer.handleUpgrade(req, socket, head, (ws) => {
+          this.onJoin.next(ws);
+        });
+        return;
+      }
+      this.proxy.ws(req, socket, head, { target: `ws://${mediaServerHost}` });
     });
     await new Promise((resolve, reject) => {
       this.server!.listen(port, resolve);

@@ -44,7 +44,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
   componentDidMount() {
     const video = document.getElementById('video') as HTMLVideoElement;
     video.volume = 0.5;
-    start(video).catch((e) => { console.error(e.stack || e); });
+    start(video).catch((e) => { console.error(e.message, e.stack || e); });
   }
 
   onLoadedMetadata() {
@@ -110,12 +110,46 @@ async function start(element: HTMLVideoElement) {
   }
 }
 
+/**
+ * resolve when video is ended.
+ */
 async function startPlayer(element: HTMLVideoElement, host: string) {
-  const flvPlayer = flvJS.createPlayer({
-    isLive: true,
-    type: 'flv',
-    url: `ws://${host}/live/.flv`,
+  // 通信用のwebocket
+  // メディア用のwebsocket or メディア用のWebRTC
+  // websocketが切れた場合全て切ってやり直し
+  return new Promise((resolve, reject) => {
+    const webSocket = new WebSocket(`ws://${host}/join`);
+    webSocket.onerror = (ev) => {
+      webSocket.close();
+      console.error(ev);
+      reject(new Error('WebSocket error'));
+    };
+    webSocket.onmessage = (ev) => {
+      // 色々やることあるぞ
+      const { type, payload } = JSON.parse(ev.data);
+      switch (type) {
+        case 'upstream': {
+          resolve(startPlayerFromWebSocket(element, payload.url));
+          return;
+        }
+        default: {
+          reject(new Error('not implemented'));
+        }
+      }
+    };
   });
+}
+
+async function startPlayerFromWebSocket(element: HTMLVideoElement, url: string) {
+  const flvPlayer = flvJS.createPlayer(
+    {
+      url,
+      type: 'flv',
+    },
+    {
+      isLive: true,
+    },
+  );
   flvPlayer.attachMediaElement(element);
   flvPlayer.load();
   await Promise.all([

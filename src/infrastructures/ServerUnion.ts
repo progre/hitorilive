@@ -1,5 +1,6 @@
 import net from 'net';
 import { Subject } from 'rxjs';
+import WebSocket from 'ws';
 import { Settings } from '../commons/types';
 import Chat from '../domains/Chat';
 import HTTPServer from './HTTPServer';
@@ -14,11 +15,14 @@ export default class ServerUnion {
   private serverStarting = false;
 
   readonly onUpdateListeners: Subject<{}> = this.mediaServer.onUpdateListeners;
+  readonly onJoin: Subject<WebSocket>;
   readonly error = new Subject<{ reason: string }>();
 
   constructor(chat: Chat, upnpDescription: string) {
     this.httpServer = new HTTPServer(chat);
     this.upnp = new Upnp(upnpDescription);
+
+    this.onJoin = this.httpServer.onJoin;
   }
 
   getListeners() {
