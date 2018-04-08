@@ -3,7 +3,7 @@ import { ipcRenderer } from 'electron';
 import { configure } from 'mobx';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './Containers/App';
+import App from './containers/App';
 import Store from './Store';
 
 configure({ enforceActions: true });
