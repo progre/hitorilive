@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { Message } from '../../../types';
+import { Message } from '../../../commons/types';
 
 export default class API {
   async postMessage(messageData: { id: string; message: string }) {

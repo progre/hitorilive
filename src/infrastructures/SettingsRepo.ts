@@ -2,7 +2,7 @@
 import { app } from 'electron';
 import fs from 'fs';
 import util from 'util';
-import { Settings } from '../types';
+import { Settings } from '../commons/types';
 
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);

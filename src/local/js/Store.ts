@@ -2,7 +2,7 @@
 import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
 import { sync as uid } from 'uid-safe';
-import { Message, Settings } from '../../types';
+import { Message, Settings } from '../../commons/types';
 
 export default class Store {
   @observable rtmpPort?: number;

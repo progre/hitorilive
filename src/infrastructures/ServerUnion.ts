@@ -1,7 +1,7 @@
 import net from 'net';
 import { Subject } from 'rxjs';
+import { Settings } from '../commons/types';
 import Chat from '../domains/Chat';
-import { Settings } from '../types';
 import HTTPServer from './HTTPServer';
 import MediaServer from './MediaServer';
 import Upnp, { PortAlreadyAssignedError } from './Upnp';

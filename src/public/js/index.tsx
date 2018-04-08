@@ -2,7 +2,7 @@ import { configure } from 'mobx';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { sync as uid } from 'uid-safe';
-import { Message } from '../../types';
+import { Message } from '../../commons/types';
 import Root from './components/Root';
 import API from './infrastructures/API';
 
