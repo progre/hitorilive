@@ -23,10 +23,39 @@ export default class App {
       `ws://127.0.0.1:${settings.httpPort}/live/.flv`,
     );
 
-    this.serverUnion.error.subscribe(({ reason }) => {
+    this.listenServerEvents(this.serverUnion);
+    this.listenGUIEvents(ipcMain);
+
+    this.chat.onMessage.subscribe((message) => {
+      this.webContents.send('addMessage', message);
+    });
+  }
+
+  isRunning() {
+    return this.serverUnion.isRunning();
+  }
+
+  async close() {
+    await this.serverUnion.closeServer(this.settings.useUpnp);
+  }
+
+  private listenServerEvents(serverUnion: ServerUnion) {
+    serverUnion.error.subscribe(({ reason }) => {
       this.webContents.send('error', reason);
     });
+    serverUnion.onUpdateListeners.subscribe(() => {
+      this.webContents.send('setListeners', serverUnion.getListeners());
+    });
+    serverUnion.onJoin.subscribe((socket) => {
+      try {
+        this.signalingServer.join(socket);
+      } catch (e) {
+        console.error(e.stack || e);
+      }
+    });
+  }
 
+  private listenGUIEvents(ipcMain: IpcMain) {
     ipcMain.on('setRTMPPort', (_: any, value: number) => {
       this.settings.rtmpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
@@ -36,7 +65,7 @@ export default class App {
     ipcMain.on('setHTTPPort', (_: any, value: number) => {
       this.settings.httpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
-      this.signalingServer.mediaURL = `ws://127.0.0.1:${settings.httpPort}/live/.flv`;
+      this.signalingServer.mediaURL = `ws://127.0.0.1:${this.settings.httpPort}/live/.flv`;
       this.serverUnion.delayUpdateServer({ ...this.settings });
       this.webContents.send('setSettings', this.settings);
     });
@@ -49,29 +78,6 @@ export default class App {
     ipcMain.on('addMessage', (_: any, value: { id: string; message: string }) => {
       this.chat.addMessage(value);
     });
-
-    this.chat.onMessage.subscribe((message) => {
-      this.webContents.send('addMessage', message);
-    });
-
-    this.serverUnion.onUpdateListeners.subscribe(() => {
-      this.webContents.send('setListeners', this.serverUnion.getListeners());
-    });
-    this.serverUnion.onJoin.subscribe((socket) => {
-      try {
-        this.signalingServer.join(socket);
-      } catch (e) {
-        console.error(e.stack || e);
-      }
-    });
-  }
-
-  isRunning() {
-    return this.serverUnion.isRunning();
-  }
-
-  async close() {
-    await this.serverUnion.closeServer(this.settings.useUpnp);
   }
 
   private handleError(e: Error) {
