@@ -4,12 +4,8 @@ import React, { ChangeEvent } from 'react';
 import Chat from '../../../commons/components/Chat';
 import Store from '../Store';
 
-export interface Props {
-  store: Store;
-}
-
 @observer
-export default class App extends React.Component<Props> {
+export default class App extends React.Component<{ store: Store }> {
   constructor(props: any, context?: any) {
     super(props, context);
     this.onChangeRTMP = this.onChangeRTMP.bind(this);

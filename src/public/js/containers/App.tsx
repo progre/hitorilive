@@ -3,12 +3,8 @@ import React from 'react';
 import Root from '../components/Root';
 import Store from '../Store';
 
-export interface Prop {
-  store: Store;
-}
-
 @observer
-export default class App extends React.Component<Prop> {
+export default class App extends React.Component<{ store: Store }> {
   constructor(props: any, context?: any) {
     super(props, context);
     this.onPost = this.onPost.bind(this);
