@@ -1,3 +1,4 @@
+import flvJS from 'flv.js';
 import { configure } from 'mobx';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -5,6 +6,7 @@ import { sync as uid } from 'uid-safe';
 import { Message } from '../../commons/types';
 import Root from './components/Root';
 import API from './infrastructures/API';
+import SignalingClient from './infrastructures/SignalingClient';
 
 configure({ enforceActions: true });
 
@@ -12,10 +14,12 @@ interface State {
   chat: {
     messages: ReadonlyArray<Message>;
   };
+  flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
 }
 
 class App extends React.Component<{}, State> {
   private api = new API();
+  private signalingClient?: SignalingClient;
 
   constructor(props: any, context?: any) {
     super(props, context);
@@ -23,11 +27,16 @@ class App extends React.Component<{}, State> {
     this.state = { chat: { messages: [] } };
 
     // if before it, will display loading indicator on Firefox
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       this.api.getMessagesStream().subscribe(
         (x) => { this.addMessages(x); },
         handleError,
       );
+      this.signalingClient = await SignalingClient.create(location.host);
+      this.setState({
+        ...this.state,
+        flvPlayer: this.signalingClient.flvPlayer,
+      });
     });
   }
 
@@ -37,10 +46,26 @@ class App extends React.Component<{}, State> {
 
   render() {
     return (
-      <Root chat={{
-        messages: this.state.chat.messages,
-        onPost: this.onPost,
-      }} />
+      <Root
+        chat={{
+          messages: this.state.chat.messages,
+          onPost: this.onPost,
+        }}
+        player={{
+          flvPlayer: this.state.flvPlayer,
+          onStop: async () => {
+            this.setState({
+              ...this.state,
+              flvPlayer: undefined,
+            });
+            this.signalingClient = await SignalingClient.create(location.host);
+            this.setState({
+              ...this.state,
+              flvPlayer: this.signalingClient.flvPlayer,
+            });
+          },
+        }}
+      />
     );
   }
 

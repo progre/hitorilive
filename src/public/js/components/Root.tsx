@@ -1,3 +1,4 @@
+import flvJS from 'flv.js';
 import React from 'react';
 import Chat from '../../../commons/components/Chat';
 import Player from './Player';
@@ -11,6 +12,10 @@ export interface Props {
     }>;
 
     onPost(event: { message: string }): void;
+  };
+  player: {
+    flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
+    onStop(): void;
   };
 }
 
@@ -37,6 +42,7 @@ export default class Root extends React.Component<Props, typeof initialState> {
     return (
       <main style={{ display: 'flex', height: '100%' }}>
         <Player
+          {...this.props.player}
           onClickChat={this.onClickChat}
           styles={{ container: { width: '100%' } }}
         />

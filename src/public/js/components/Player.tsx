@@ -26,7 +26,10 @@ export interface Props {
     container: CSSProperties;
   };
 
+  flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
+
   onClickChat(): void;
+  onStop(): void;
 }
 
 export const initialState = {
@@ -41,10 +44,13 @@ export default class Player extends React.Component<Props, typeof initialState> 
     this.state = initialState;
   }
 
-  componentDidMount() {
+  componentDidUpdate(prevProps: Props, prevState: typeof initialState, snapshot: any) {
     const video = document.getElementById('video') as HTMLVideoElement;
     video.volume = 0.5;
-    start(video).catch((e) => { console.error(e.message, e.stack || e); });
+    if (prevProps.flvPlayer !== this.props.flvPlayer && this.props.flvPlayer != null) {
+      play(video, this.props.flvPlayer)
+        .catch((e) => { console.error(e.message, e.stack || e); });
+    }
   }
 
   onLoadedMetadata() {
@@ -53,6 +59,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
 
   onEmptied() {
     this.setState({ ...this.state, playing: false });
+    this.props.onStop();
   }
 
   render() {
@@ -104,52 +111,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
   }
 }
 
-async function start(element: HTMLVideoElement) {
-  for (; ;) {
-    await startPlayer(element, location.host);
-  }
-}
-
-/**
- * resolve when video is ended.
- */
-async function startPlayer(element: HTMLVideoElement, host: string) {
-  // 通信用のwebocket
-  // メディア用のwebsocket or メディア用のWebRTC
-  // websocketが切れた場合全て切ってやり直し
-  return new Promise((resolve, reject) => {
-    const webSocket = new WebSocket(`ws://${host}/join`);
-    webSocket.onerror = (ev) => {
-      webSocket.close();
-      console.error(ev);
-      reject(new Error('WebSocket error'));
-    };
-    webSocket.onmessage = (ev) => {
-      // 色々やることあるぞ
-      const { type, payload } = JSON.parse(ev.data);
-      switch (type) {
-        case 'upstream': {
-          resolve(startPlayerFromWebSocket(element, payload.url));
-          return;
-        }
-        default: {
-          reject(new Error('not implemented'));
-        }
-      }
-    };
-  });
-}
-
-async function startPlayerFromWebSocket(element: HTMLVideoElement, url: string) {
-  const flvPlayer = flvJS.createPlayer(
-    {
-      url,
-      type: 'flv',
-    },
-    {
-      isLive: true,
-    },
-  );
+async function play(element: HTMLVideoElement, flvPlayer: ReturnType<typeof flvJS.createPlayer>) {
   flvPlayer.attachMediaElement(element);
   flvPlayer.load();
   await Promise.all([
