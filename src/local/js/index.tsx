@@ -10,7 +10,4 @@ configure({ enforceActions: true });
 
 const store = new Store(JSON.parse(location.hash.slice(1)), ipcRenderer);
 
-ReactDOM.render(
-  <App store={store} />,
-  document.getElementById('app'),
-);
+ReactDOM.render(<App store={store} />, document.getElementById('app'));
