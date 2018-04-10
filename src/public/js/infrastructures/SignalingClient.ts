@@ -1,8 +1,11 @@
 import flvJS from 'flv.js';
+import { Subject } from 'rxjs';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
 export default class SignalingClient {
+  readonly onClose = new Subject<void>();
+
   static async create(host: string) {
     const { webSocket, data: { type, payload } } = await new Promise<any>((resolve, reject) => {
       const ws = new WebSocket(`ws://${host}/join`);
@@ -35,9 +38,19 @@ export default class SignalingClient {
     );
   }
 
-  constructor(
+  private constructor(
     webSocket: WebSocket,
     public flvPlayer: FLVPlayer,
   ) {
+    // Probably no error is thrown after opening.
+    webSocket.onerror = (ev) => {
+      webSocket.onerror = null;
+      webSocket.close();
+    };
+    webSocket.onclose = (ev) => {
+      webSocket.onclose = null;
+      this.onClose.next();
+      this.onClose.complete();
+    };
   }
 }

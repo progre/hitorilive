@@ -13,6 +13,7 @@ export default class Store {
   @observable flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
 
   private api = new API();
+  private signalingClient!: SignalingClient;
 
   constructor() {
     this.api.getMessagesStream().subscribe(
@@ -32,10 +33,19 @@ export default class Store {
     this.initSignalingClient().catch(handleError);
   }
 
-  private async initSignalingClient() {
-    const signalingClient = await SignalingClient.create(location.host);
+  private async initSignalingClient(): Promise<void> {
+    try {
+      this.signalingClient = await SignalingClient.create(location.host);
+      this.signalingClient.onClose.subscribe(() => {
+        this.initSignalingClient().catch(handleError);
+      });
+    } catch (err) {
+      handleError(err);
+      await new Promise((resolve, reject) => { setTimeout(resolve, 3000); });
+      return this.initSignalingClient();
+    }
     runInAction(() => {
-      this.flvPlayer = signalingClient.flvPlayer;
+      this.flvPlayer = this.signalingClient.flvPlayer;
     });
   }
 
