@@ -1,3 +1,13 @@
+<a name="0.4.1"></a>
+## [0.4.1](https://github.com/progre/hitorilive/compare/0.4.0...0.4.1) (2018-04-11)
+
+
+### Bug Fixes
+
+* when settings.json doesn's exist, then the app can't run ([cb5a5a2](https://github.com/progre/hitorilive/commit/cb5a5a2))
+
+
+
 <a name="0.4.0"></a>
 # [0.4.0](https://github.com/progre/hitorilive/compare/0.3.0...0.4.0) (2018-04-08)
 
