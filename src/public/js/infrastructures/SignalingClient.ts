@@ -1,5 +1,6 @@
 import flvJS from 'flv.js';
 import { Subject } from 'rxjs';
+import { ServerSignalingMessage } from '../../../commons/types';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
@@ -7,7 +8,8 @@ export default class SignalingClient {
   readonly onClose = new Subject<void>();
 
   static async create(host: string) {
-    const { webSocket, data: { type, payload } } = await new Promise<any>((resolve, reject) => {
+    type Return = { webSocket: WebSocket; data: ServerSignalingMessage };
+    const { webSocket, data: { type, payload } } = await new Promise<Return>((resolve, reject) => {
       const ws = new WebSocket(`ws://${host}/join`);
       ws.onerror = (ev) => {
         ws.onerror = null;

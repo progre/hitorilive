@@ -1,6 +1,7 @@
 import http from 'http';
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
+import { ServerSignalingMessage } from '../commons/types';
 import Tree from './Tree';
 
 export default class SignalingServer {
@@ -28,7 +29,11 @@ export default class SignalingServer {
       return;
     }
     if (parent.id === Tree.ROOT) {
-      socket.send(JSON.stringify({ type: 'upstream', payload: { url: this.mediaURL } }));
+      const message: ServerSignalingMessage = {
+        type: 'upstream',
+        payload: { url: this.mediaURL },
+      };
+      socket.send(JSON.stringify(message));
       this.tree.connect({ id }, parent);
       return;
     }
