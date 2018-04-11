@@ -49,7 +49,7 @@
     "dist"
   ],
   "homepage": "https://github.com/progre/hitorilive#readme",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "main": "dist/index.js",
   "private": true,
   "repository": {
