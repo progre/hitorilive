@@ -11,9 +11,9 @@ export default class SettingsRepo {
   private path = `${app.getPath('userData')}/settings.json`;
 
   async get(): Promise<Settings> {
-    const rawJSON = await readFile(this.path, { encoding: 'utf8' });
-    const json = (() => {
+    const json = await (async () => {
       try {
+        const rawJSON = await readFile(this.path, { encoding: 'utf8' });
         return JSON.parse(rawJSON);
       } catch {
         return {};
