@@ -1,3 +1,6 @@
+import { ConnectPeersServerMessage } from '../utils/connectPeersClient';
+import { ConnectPeersClientMessage } from '../utils/connectPeersServer';
+
 export interface Message {
   id: string;
   index: number;
@@ -10,14 +13,22 @@ export interface Settings {
   useUpnp: boolean;
 }
 
-export interface ClientSignalingMessage {
-}
+export type ClientSignalingMessage = ConnectPeersClientMessage;
+export type ServerSignalingMessage = (
+  ConnectPeersServerMessage | UpstreamMessage | DownstreamMessage
+);
 
-export type ServerSignalingMessage = WebSocketUpstream;
-
-export interface WebSocketUpstream {
+export interface UpstreamMessage {
   readonly type: 'upstream';
   readonly payload: {
-    readonly url: string;
+    readonly url?: string;
+    readonly tunnelId?: string;
+  };
+}
+
+export interface DownstreamMessage {
+  readonly type: 'downstream';
+  readonly payload: {
+    readonly tunnelId: string;
   };
 }

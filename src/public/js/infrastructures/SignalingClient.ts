@@ -1,6 +1,9 @@
 import flvJS from 'flv.js';
 import { Subject } from 'rxjs';
+import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
+import connectPeersClient from '../../../utils/connectPeersClient';
+import DataChannelLoader from './DataChannelLoader';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
@@ -26,33 +29,73 @@ export default class SignalingClient {
     if (type !== 'upstream') {
       throw new Error('logic error');
     }
-    return new this(
-      webSocket,
-      flvJS.createPlayer(
-        {
-          url: payload.url,
-          type: 'flv',
-        },
-        {
-          isLive: true,
-        },
-      ),
-    );
+    if ('url' in payload) {
+      return new this(
+        webSocket,
+        flvJS.createPlayer(
+          {
+            url: payload.url,
+            type: 'flv',
+          },
+          { isLive: true },
+        ),
+      );
+    }
+    if ('tunnelId' in payload) {
+      const tunnelId = payload.tunnelId!;
+      // TODO: stun経由
+      const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
+      return new this(
+        webSocket,
+        flvJS.createPlayer(
+          { type: 'flv' },
+          {
+            isLive: true,
+            loader: new DataChannelLoader(peer),
+          },
+        ),
+      );
+    }
+    throw new Error('logic error');
   }
 
   private constructor(
-    webSocket: WebSocket,
+    signalingWebSocket: WebSocket,
     public flvPlayer: FLVPlayer,
+    // いつでもsubscribe/unsubscribeできるものをもっておく必要がありそう
   ) {
     // Probably no error is thrown after opening.
-    webSocket.onerror = (ev) => {
-      webSocket.onerror = null;
-      webSocket.close();
+    signalingWebSocket.onerror = (ev) => {
+      signalingWebSocket.onerror = null;
+      signalingWebSocket.close();
     };
-    webSocket.onclose = (ev) => {
-      webSocket.onclose = null;
+    signalingWebSocket.onclose = (ev) => {
+      signalingWebSocket.onclose = null;
       this.onClose.next();
       this.onClose.complete();
     };
+    signalingWebSocket.onmessage = async (ev) => {
+      try {
+        console.log(ev.data);
+        const { type, payload }: ServerSignalingMessage = JSON.parse(ev.data);
+        if (type !== 'downstream' || payload.tunnelId == null) {
+          throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
+        }
+        signalingWebSocket.onmessage = null;
+        const peer = await connectPeersClient(signalingWebSocket, payload.tunnelId, {});
+        proxyTo(peer);
+      } catch (err) {
+        console.error(err.message, err.stack || err);
+      }
+    };
   }
+}
+
+// TODO: まともな実装
+function proxyTo(peer: Peer.Instance) {
+  const webSocket = new WebSocket('ws://127.0.0.1:17144/live/.flv');
+  webSocket.onmessage = (ev) => {
+    console.log(ev.type);
+    peer.send(ev.data);
+  };
 }

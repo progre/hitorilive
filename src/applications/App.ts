@@ -46,9 +46,9 @@ export default class App {
     serverUnion.onUpdateListeners.subscribe(() => {
       this.webContents.send('setListeners', serverUnion.getListeners());
     });
-    serverUnion.onJoin.subscribe((socket) => {
+    serverUnion.onJoin.subscribe(async (socket) => {
       try {
-        this.signalingServer.join(socket);
+        await this.signalingServer.join(socket);
       } catch (e) {
         console.error(e.stack || e);
       }
