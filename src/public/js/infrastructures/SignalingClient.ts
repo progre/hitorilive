@@ -62,6 +62,11 @@ export default class SignalingClient {
   ) {
     let sharedUpstream: Observable<ArrayBuffer> | null = upstream.share();
     sharedUpstream.subscribe({
+      error(err: Error) {
+        console.error(err.message, err.stack || err);
+        sharedUpstream = null;
+        signalingWebSocket.close();
+      },
       complete() {
         sharedUpstream = null;
         // when close upstream then close signaling
@@ -70,15 +75,17 @@ export default class SignalingClient {
     });
 
     const replayableHeaders = sharedUpstream.take(4).shareReplay();
-    replayableHeaders.first().subscribe((header) => {
-      const expected = [
-        0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
-        0x09, 0x00, 0x00, 0x00, 0x00,
-      ];
-      if (!new Uint8Array(header).every((x, i) => x === expected[i])) {
-        throw new Error('logic error');
-      }
-    });
+    // TODO: node-media-serverの更新が必要
+    // replayableHeaders.first().subscribe((header) => {
+    //   const expected = [
+    //     0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
+    //     0x09, 0x00, 0x00, 0x00, 0x00,
+    //   ];
+    //   if (!new Uint8Array(header).every((x, i) => x === expected[i])) {
+    //     console.error(new Uint8Array(header));
+    //     throw new Error(`logic error (${header.byteLength})`);
+    //   }
+    // });
     this.flvPlayer = flvJS.createPlayer(
       { type: 'flv' },
       {

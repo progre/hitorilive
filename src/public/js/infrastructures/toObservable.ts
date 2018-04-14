@@ -19,7 +19,9 @@ export function toObservableFromWebSocket(webSocket: WebSocket) {
         subscriber.error(new Error('Unsupported WebSocket'));
       }
     };
-    webSocket.onerror = (ev) => { subscriber.error(new Error('webSocket error')); };
+    webSocket.onerror = (ev) => {
+      subscriber.error(new Error('webSocket error'));
+    };
     webSocket.onclose = () => {
       logger('WebSocket media closed.');
       subscriber.complete();
