@@ -50,6 +50,7 @@ export default class App {
       try {
         await this.signalingServer.join(socket);
       } catch (e) {
+        socket.close();
         console.error(e.stack || e);
       }
     });

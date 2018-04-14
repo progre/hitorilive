@@ -10,7 +10,6 @@ export default async function connectPeersClient(
   return new Promise<Peer.Instance>((resolve, reject) => {
     const peer = new Peer(opts);
     peer.on('signal', (signal: any) => {
-      console.log('send', signal);
       webSocket.send(JSON.stringify({
         type: 'tunnel',
         payload: { tunnelId, data: signal },
@@ -21,7 +20,6 @@ export default async function connectPeersClient(
       if (data.type !== 'tunnel' || data.payload.tunnelId !== tunnelId) {
         return;
       }
-      console.log('recv', data.payload.data);
       peer.signal(data.payload.data);
     };
     webSocket.addEventListener('message', messageHandler);

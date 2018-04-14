@@ -22,7 +22,6 @@ export default async function connectPeersServer(
       }
       switch (type) {
         case 'tunnel': {
-          console.log('send to downstream');
           downstream.send(ev.data);
           return;
         }

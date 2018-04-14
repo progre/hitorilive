@@ -1,17 +1,20 @@
 import flvJS from 'flv.js';
-import { Subject } from 'rxjs';
-import Peer from 'simple-peer';
+import { Observable, Subject } from 'rxjs';
 import { ServerSignalingMessage } from '../../../commons/types';
 import connectPeersClient from '../../../utils/connectPeersClient';
-import DataChannelLoader from './DataChannelLoader';
+import ObservableLoader from './ObservableLoader';
+import { toObservableFromPeer, toObservableFromWebSocket } from './toObservable';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
 export default class SignalingClient {
+  readonly flvPlayer: FLVPlayer;
+
   readonly onClose = new Subject<void>();
 
   static async create(host: string) {
     type Return = { webSocket: WebSocket; data: ServerSignalingMessage };
+    // TODO: promiseではmessageを取りこぼす疑いがある
     const { webSocket, data: { type, payload } } = await new Promise<Return>((resolve, reject) => {
       const ws = new WebSocket(`ws://${host}/join`);
       ws.onerror = (ev) => {
@@ -30,15 +33,10 @@ export default class SignalingClient {
       throw new Error('logic error');
     }
     if ('url' in payload) {
+      const url = payload.url!;
       return new this(
         webSocket,
-        flvJS.createPlayer(
-          {
-            url: payload.url,
-            type: 'flv',
-          },
-          { isLive: true },
-        ),
+        toObservableFromWebSocket(new WebSocket(url)),
       );
     }
     if ('tunnelId' in payload) {
@@ -47,13 +45,7 @@ export default class SignalingClient {
       const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
       return new this(
         webSocket,
-        flvJS.createPlayer(
-          { type: 'flv' },
-          {
-            isLive: true,
-            loader: new DataChannelLoader(peer),
-          },
-        ),
+        toObservableFromPeer(peer),
       );
     }
     throw new Error('logic error');
@@ -61,9 +53,19 @@ export default class SignalingClient {
 
   private constructor(
     signalingWebSocket: WebSocket,
-    public flvPlayer: FLVPlayer,
-    // いつでもsubscribe/unsubscribeできるものをもっておく必要がありそう
+    observable: Observable<ArrayBuffer>,
   ) {
+    const shared = observable.share();
+    const replayableHeaders = shared.take(4).shareReplay();
+
+    this.flvPlayer = flvJS.createPlayer(
+      { type: 'flv' },
+      {
+        isLive: true,
+        loader: new ObservableLoader(replayableHeaders.concat(shared)),
+      },
+    );
+
     // Probably no error is thrown after opening.
     signalingWebSocket.onerror = (ev) => {
       signalingWebSocket.onerror = null;
@@ -76,26 +78,21 @@ export default class SignalingClient {
     };
     signalingWebSocket.onmessage = async (ev) => {
       try {
-        console.log(ev.data);
         const { type, payload }: ServerSignalingMessage = JSON.parse(ev.data);
         if (type !== 'downstream' || payload.tunnelId == null) {
           throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
         }
         signalingWebSocket.onmessage = null;
         const peer = await connectPeersClient(signalingWebSocket, payload.tunnelId, {});
-        proxyTo(peer);
+        // TODO: neet to unsubscribe
+        replayableHeaders
+          .concat(shared)
+          .subscribe((buffer) => {
+            peer.send(buffer);
+          });
       } catch (err) {
         console.error(err.message, err.stack || err);
       }
     };
   }
-}
-
-// TODO: まともな実装
-function proxyTo(peer: Peer.Instance) {
-  const webSocket = new WebSocket('ws://127.0.0.1:17144/live/.flv');
-  webSocket.onmessage = (ev) => {
-    console.log(ev.type);
-    peer.send(ev.data);
-  };
 }
