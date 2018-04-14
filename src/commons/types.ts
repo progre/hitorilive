@@ -21,7 +21,7 @@ export type ServerSignalingMessage = (
 export interface UpstreamMessage {
   readonly type: 'upstream';
   readonly payload: {
-    readonly url?: string;
+    readonly path?: string;
     readonly tunnelId?: string;
   };
 }

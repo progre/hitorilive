@@ -35,12 +35,12 @@ export default class SignalingClient {
     if (type !== 'upstream') {
       throw new Error('logic error');
     }
-    if ('url' in payload) {
+    if ('path' in payload) {
       logger('Receive from WebSocket');
-      const url = payload.url!;
+      const path = payload.path!;
       return new this(
         webSocket,
-        toObservableFromWebSocket(new WebSocket(url)),
+        toObservableFromWebSocket(new WebSocket(`ws://${host}${path}`)),
       );
     }
     if ('tunnelId' in payload) {

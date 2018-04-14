@@ -9,7 +9,7 @@ import SettingsRepo from '../infrastructures/SettingsRepo';
 export default class App {
   private readonly chat = new Chat();
   readonly serverUnion = new ServerUnion(this.chat, 'HitoriLive');
-  private readonly signalingServer = new SignalingServer('ws://127.0.0.1:17144/live/.flv');
+  private readonly signalingServer = new SignalingServer('/live/.flv');
 
   constructor(
     ipcMain: IpcMain,
@@ -19,9 +19,7 @@ export default class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
-    this.signalingServer = new SignalingServer(
-      `ws://127.0.0.1:${settings.httpPort}/live/.flv`,
-    );
+    this.signalingServer = new SignalingServer('/live/.flv');
 
     this.listenServerEvents(this.serverUnion);
     this.listenGUIEvents(ipcMain);
@@ -73,7 +71,6 @@ export default class App {
     ipcMain.on('setHTTPPort', (_: any, value: number) => {
       this.settings.httpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
-      this.signalingServer.mediaURL = `ws://127.0.0.1:${this.settings.httpPort}/live/.flv`;
       this.serverUnion.delayUpdateServer({ ...this.settings });
       this.webContents.send('setSettings', this.settings);
     });

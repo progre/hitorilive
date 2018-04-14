@@ -9,7 +9,7 @@ export default class SignalingServer {
   private readonly tree = new Tree();
 
   constructor(
-    public mediaURL: string,
+    private readonly mediaPath: string,
   ) {
   }
 
@@ -39,7 +39,7 @@ export default class SignalingServer {
   private joinToRoot(socket: WebSocket, id: string, parent: { id: string }) {
     const message: ServerSignalingMessage = {
       type: 'upstream',
-      payload: { url: this.mediaURL },
+      payload: { path: this.mediaPath },
     };
     socket.send(JSON.stringify(message));
     this.tree.connect({ id }, parent);

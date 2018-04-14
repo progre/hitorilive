@@ -46,7 +46,6 @@ export default class DataChannelLoader extends flvJS.BaseLoader {
   open(dataSource: MediaSegment) {
     this._status = LoaderStatus.kBuffering;
     this.peer.on('data', (data: Buffer) => {
-      console.log(data.length);
       this.dispatchArrayBuffer(<ArrayBuffer>data.buffer);
     });
   }
