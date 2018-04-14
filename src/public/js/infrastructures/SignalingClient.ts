@@ -75,17 +75,15 @@ export default class SignalingClient {
     });
 
     const replayableHeaders = sharedUpstream.take(4).shareReplay();
-    // TODO: node-media-serverの更新が必要
-    // replayableHeaders.first().subscribe((header) => {
-    //   const expected = [
-    //     0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
-    //     0x09, 0x00, 0x00, 0x00, 0x00,
-    //   ];
-    //   if (!new Uint8Array(header).every((x, i) => x === expected[i])) {
-    //     console.error(new Uint8Array(header));
-    //     throw new Error(`logic error (${header.byteLength})`);
-    //   }
-    // });
+    replayableHeaders.first().subscribe((header) => {
+      const expected = [
+        0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
+        0x09, 0x00, 0x00, 0x00, 0x00,
+      ];
+      if (!new Uint8Array(header).every((x, i) => x === expected[i])) {
+        throw new Error(`logic error (${header.byteLength})`);
+      }
+    });
     this.flvPlayer = flvJS.createPlayer(
       { type: 'flv' },
       {
