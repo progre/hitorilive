@@ -81,9 +81,6 @@ export default class ServerUnion {
   }
 
   async closeServer(useUpnp: boolean) {
-    if (this.mediaServer.isRunning()) {
-      await this.mediaServer.stopServer();
-    }
     if (this.httpServer.isRunning()) {
       const oldHTTPPort = this.httpServer.port;
       await this.httpServer.stopServer();
@@ -95,6 +92,9 @@ export default class ServerUnion {
           this.error.next(e.message);
         }
       }
+    }
+    if (this.mediaServer.isRunning()) {
+      await this.mediaServer.stopServer();
     }
   }
 }

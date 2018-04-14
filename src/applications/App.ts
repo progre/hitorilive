@@ -41,9 +41,16 @@ export default class App {
 
   private listenServerEvents(serverUnion: ServerUnion) {
     serverUnion.error.subscribe(({ reason }) => {
+      if (this.webContents.isDestroyed()) {
+        console.error(new Error(reason));
+        return;
+      }
       this.webContents.send('error', reason);
     });
     serverUnion.onUpdateListeners.subscribe(() => {
+      if (this.webContents.isDestroyed()) {
+        return;
+      }
       this.webContents.send('setListeners', serverUnion.getListeners());
     });
     serverUnion.onJoin.subscribe(async (socket) => {
