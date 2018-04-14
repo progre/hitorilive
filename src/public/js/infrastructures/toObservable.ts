@@ -1,3 +1,6 @@
+import debug from 'debug';
+const logger = debug('hitorilive:toObservable');
+
 import { Observable } from 'rxjs';
 import Peer from 'simple-peer';
 
@@ -17,7 +20,10 @@ export function toObservableFromWebSocket(webSocket: WebSocket) {
       }
     };
     webSocket.onerror = (ev) => { subscriber.error(new Error('webSocket error')); };
-    webSocket.onclose = () => { subscriber.complete(); };
+    webSocket.onclose = () => {
+      logger('WebSocket media closed.');
+      subscriber.complete();
+    };
   });
 }
 
@@ -30,6 +36,7 @@ export function toObservableFromPeer(peer: Peer.Instance) {
       subscriber.error(err);
     });
     peer.on('close', () => {
+      logger('WebRTC media closed.');
       subscriber.complete();
     });
   });

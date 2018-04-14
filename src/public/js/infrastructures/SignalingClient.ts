@@ -1,3 +1,6 @@
+import debug from 'debug';
+const logger = debug('hitorilive:SignalingClient');
+
 import flvJS from 'flv.js';
 import { Observable, Subject } from 'rxjs';
 import { ServerSignalingMessage } from '../../../commons/types';
@@ -33,6 +36,7 @@ export default class SignalingClient {
       throw new Error('logic error');
     }
     if ('url' in payload) {
+      logger('Receive from WebSocket');
       const url = payload.url!;
       return new this(
         webSocket,
@@ -40,6 +44,7 @@ export default class SignalingClient {
       );
     }
     if ('tunnelId' in payload) {
+      logger('Receive from WebRTC');
       const tunnelId = payload.tunnelId!;
       // TODO: stun経由
       const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
@@ -53,16 +58,32 @@ export default class SignalingClient {
 
   private constructor(
     signalingWebSocket: WebSocket,
-    observable: Observable<ArrayBuffer>,
+    upstream: Observable<ArrayBuffer>,
   ) {
-    const shared = observable.share();
-    const replayableHeaders = shared.take(4).shareReplay();
+    let sharedUpstream: Observable<ArrayBuffer> | null = upstream.share();
+    sharedUpstream.subscribe({
+      complete() {
+        sharedUpstream = null;
+        // when close upstream then close signaling
+        signalingWebSocket.close();
+      },
+    });
 
+    const replayableHeaders = sharedUpstream.take(4).shareReplay();
+    replayableHeaders.first().subscribe((header) => {
+      const expected = [
+        0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
+        0x09, 0x00, 0x00, 0x00, 0x00,
+      ];
+      if (!new Uint8Array(header).every((x, i) => x === expected[i])) {
+        throw new Error('logic error');
+      }
+    });
     this.flvPlayer = flvJS.createPlayer(
       { type: 'flv' },
       {
         isLive: true,
-        loader: new ObservableLoader(replayableHeaders.concat(shared)),
+        loader: new ObservableLoader(replayableHeaders.concat(sharedUpstream)),
       },
     );
 
@@ -84,11 +105,17 @@ export default class SignalingClient {
         }
         signalingWebSocket.onmessage = null;
         const peer = await connectPeersClient(signalingWebSocket, payload.tunnelId, {});
-        // TODO: neet to unsubscribe
+        if (sharedUpstream == null) {
+          // stream already closed
+          peer.destroy();
+          return;
+        }
         replayableHeaders
-          .concat(shared)
-          .subscribe((buffer) => {
-            peer.send(buffer);
+          .concat(sharedUpstream)
+          .subscribe({
+            next(buffer: ArrayBuffer) { peer.send(buffer); },
+            error(err: Error) { console.error(err.message, err.stack || err); },
+            complete() { peer.destroy(); },
           });
       } catch (err) {
         console.error(err.message, err.stack || err);

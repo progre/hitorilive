@@ -16,7 +16,7 @@ export default class App extends React.Component<{ store: Store }> {
   }
 
   private onStop() {
-    this.props.store.cleanUpPlayer();
+    // NOP
   }
 
   render() {

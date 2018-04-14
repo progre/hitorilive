@@ -36,9 +36,7 @@ export default class Store {
   private async initSignalingClient(): Promise<void> {
     try {
       this.signalingClient = await SignalingClient.create(location.host);
-      this.signalingClient.onClose.subscribe(() => {
-        this.initSignalingClient().catch(handleError);
-      });
+      this.signalingClient.onClose.subscribe(() => { this.cleanUpPlayer(); });
     } catch (err) {
       handleError(err);
       await new Promise((resolve, reject) => { setTimeout(resolve, 3000); });
