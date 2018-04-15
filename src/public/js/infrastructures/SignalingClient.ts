@@ -1,5 +1,5 @@
 import debug from 'debug';
-const logger = debug('hitorilive:SignalingClient');
+const log = debug('hitorilive:SignalingClient');
 
 import flvJS from 'flv.js';
 import { Observable, Subject } from 'rxjs';
@@ -12,6 +12,9 @@ export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
 export default class SignalingClient {
   readonly flvPlayer: FLVPlayer;
+  private readonly replayableHeaders: Observable<ArrayBuffer>;
+  private sharedUpstream?: Observable<ArrayBuffer>;
+  private downstreamsCount = 0;
 
   readonly onClose = new Subject<void>();
 
@@ -36,7 +39,7 @@ export default class SignalingClient {
       throw new Error('logic error');
     }
     if ('path' in payload) {
-      logger('Receive from WebSocket');
+      log('Receive from WebSocket');
       const path = payload.path!;
       return new this(
         webSocket,
@@ -44,10 +47,11 @@ export default class SignalingClient {
       );
     }
     if ('tunnelId' in payload) {
-      logger('Receive from WebRTC');
       const tunnelId = payload.tunnelId!;
       // TODO: stun経由
+      log('WebRTC connecting...');
       const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
+      log('Connecting completed. Receive from WebRTC');
       return new this(
         webSocket,
         toObservableFromPeer(peer),
@@ -60,22 +64,22 @@ export default class SignalingClient {
     signalingWebSocket: WebSocket,
     upstream: Observable<ArrayBuffer>,
   ) {
-    let sharedUpstream: Observable<ArrayBuffer> | null = upstream.share();
-    sharedUpstream.subscribe({
-      error(err: Error) {
+    this.sharedUpstream = upstream.share();
+    this.sharedUpstream.subscribe({
+      error: (err: Error) => {
         console.error(err.message, err.stack || err);
-        sharedUpstream = null;
+        this.sharedUpstream = undefined;
         signalingWebSocket.close();
       },
-      complete() {
-        sharedUpstream = null;
+      complete: () => {
+        this.sharedUpstream = undefined;
         // when close upstream then close signaling
         signalingWebSocket.close();
       },
     });
 
-    const replayableHeaders = sharedUpstream.take(4).shareReplay();
-    replayableHeaders.first().subscribe((header) => {
+    this.replayableHeaders = this.sharedUpstream.take(4).shareReplay();
+    this.replayableHeaders.first().subscribe((header) => {
       const expected = [
         0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
         0x09, 0x00, 0x00, 0x00, 0x00,
@@ -88,7 +92,7 @@ export default class SignalingClient {
       { type: 'flv' },
       {
         isLive: true,
-        loader: new ObservableLoader(replayableHeaders.concat(sharedUpstream)),
+        loader: new ObservableLoader(this.replayableHeaders.concat(this.sharedUpstream)),
       },
     );
 
@@ -105,26 +109,48 @@ export default class SignalingClient {
     signalingWebSocket.onmessage = async (ev) => {
       try {
         const { type, payload }: ServerSignalingMessage = JSON.parse(ev.data);
-        if (type !== 'downstream' || payload.tunnelId == null) {
-          throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
-        }
-        signalingWebSocket.onmessage = null;
-        const peer = await connectPeersClient(signalingWebSocket, payload.tunnelId, {});
-        if (sharedUpstream == null) {
-          // stream already closed
-          peer.destroy();
+        if (type !== 'downstream') {
           return;
         }
-        replayableHeaders
-          .concat(sharedUpstream)
-          .subscribe({
-            next(buffer: ArrayBuffer) { peer.send(buffer); },
-            error(err: Error) { console.error(err.message, err.stack || err); },
-            complete() { peer.destroy(); },
-          });
+        if (payload.tunnelId == null) {
+          throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
+        }
+        await this.connectDownstream(signalingWebSocket, payload.tunnelId);
       } catch (err) {
-        console.error(err.message, err.stack || err);
+        console.error(err);
       }
     };
+  }
+
+  private async connectDownstream(
+    signalingWebSocket: WebSocket,
+    tunnelId: string,
+  ) {
+    log(`tunnelId(${tunnelId}) Downstream WebRTC connecting...`);
+    const peer = await connectPeersClient(signalingWebSocket, tunnelId, {});
+    this.downstreamsCount += 1;
+    log(`tunnelId(${tunnelId}) Connecting completed. downstreams(${this.downstreamsCount})`);
+    peer.on('close', () => {
+      this.downstreamsCount -= 1;
+      log(`tunnelId(${tunnelId}) Downstream closed. downstreams(${this.downstreamsCount})`);
+    });
+    peer.on('error', (err) => {
+      console.error(err.message, err.stack || err);
+    });
+    if (this.sharedUpstream == null) {
+      // stream already closed
+      peer.destroy();
+      return;
+    }
+    this.replayableHeaders
+      .concat(this.sharedUpstream)
+      .subscribe({
+        next(buffer: ArrayBuffer) { peer.send(buffer); },
+        error(err: Error) { console.error(err.message, err.stack || err); },
+        complete() {
+          log(`tunnelId(${tunnelId}) Upstream completed.`);
+          peer.destroy();
+        },
+      });
   }
 }

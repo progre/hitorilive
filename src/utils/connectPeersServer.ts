@@ -1,3 +1,6 @@
+import debug from 'debug';
+const log = debug('hitorilive:connectPeersServer');
+
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
 import { TunnelCompletedMessage, TunnelMessage } from './connectPeersTypes';
@@ -22,6 +25,7 @@ export default async function connectPeersServer(
       }
       switch (type) {
         case 'tunnel': {
+          log(`tunnelId(${tunnelId}) Signaling message upstream -> downstream`);
           downstream.send(ev.data);
           return;
         }
@@ -44,6 +48,7 @@ export default async function connectPeersServer(
       }
       switch (type) {
         case 'tunnel': {
+          log(`tunnelId(${tunnelId}) Signaling message downstream -> upstream`);
           upstream.send(ev.data);
           return;
         }

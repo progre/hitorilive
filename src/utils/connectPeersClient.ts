@@ -9,12 +9,13 @@ export default async function connectPeersClient(
 ) {
   return new Promise<Peer.Instance>((resolve, reject) => {
     const peer = new Peer(opts);
-    peer.on('signal', (signal: any) => {
+    const signalHandler = (signal: any) => {
       webSocket.send(JSON.stringify({
         type: 'tunnel',
         payload: { tunnelId, data: signal },
       }));
-    });
+    };
+    peer.on('signal', signalHandler);
     const messageHandler = (ev: MessageEvent) => {
       const data: ConnectPeersServerMessage = JSON.parse(ev.data);
       if (data.type !== 'tunnel' || data.payload.tunnelId !== tunnelId) {
@@ -23,23 +24,26 @@ export default async function connectPeersClient(
       peer.signal(data.payload.data);
     };
     webSocket.addEventListener('message', messageHandler);
-    const removeAllListeners = () => {
-      peer.removeAllListeners('signal');
-      webSocket.removeEventListener('message', messageHandler);
-      peer.removeAllListeners('connect');
-      peer.removeAllListeners('error');
-    };
-    peer.once('connect', () => {
+    let removeAllListeners: Function;
+    const connectHandler = () => {
       removeAllListeners();
       webSocket.send(JSON.stringify({
         type: 'tunnelComplete',
         payload: { tunnelId },
       }));
       resolve(peer);
-    });
-    peer.once('error', (err: Error) => {
+    };
+    peer.once('connect', connectHandler);
+    const errorHandler = (err: Error) => {
       removeAllListeners();
       reject(err);
-    });
+    };
+    peer.once('error', errorHandler);
+    removeAllListeners = () => {
+      peer.removeListener('signal', signalHandler);
+      webSocket.removeEventListener('message', messageHandler);
+      peer.removeListener('connect', connectHandler);
+      peer.removeListener('error', errorHandler);
+    };
   });
 }

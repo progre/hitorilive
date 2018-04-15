@@ -1,3 +1,6 @@
+import debug from 'debug';
+const log = debug('hitorilive:Tree');
+
 import WebSocket from 'ws';
 
 // Since most methods are recursive,
@@ -26,6 +29,9 @@ export default class Tree {
   };
 
   joinUnderParent(client: { id: string; socket: WebSocket }) {
+    if (log.enabled) {
+      log(`client joining. count: ${this.count() + 1}`);
+    }
     return joinUnderParent(this.tree, client);
   }
 
@@ -33,15 +39,24 @@ export default class Tree {
    * @throws PeerNotFoundError
    */
   connect(client: { id: string }, parent: { id: string }) {
-    if (connect(this.tree, client, parent)) {
-      return;
+    if (!connect(this.tree, client, parent)) {
+      remove(this.tree, client);
+      throw new PeerNotFoundError();
     }
-    remove(this.tree, client);
-    throw new PeerNotFoundError();
+    if (log.enabled) {
+      log(`client connected. count: ${this.count()}`);
+    }
   }
 
   remove(client: { id: string }) {
     remove(this.tree, client);
+    if (log.enabled) {
+      log(`client removed. count: ${this.count()}`);
+    }
+  }
+
+  count() {
+    return count(this.tree) - 1;
   }
 }
 
@@ -84,4 +99,8 @@ function remove(tree: PeerTree, client: { id: string }): void {
 
 function hasCapacity(child: ReadonlyArray<PeerTree>) {
   return child.length < 1;
+}
+
+function count(tree: Readonly<PeerTree>): number {
+  return 1 + tree.children.map(count).reduce((p, c) => p + c, 0);
 }
