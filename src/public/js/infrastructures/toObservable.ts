@@ -4,20 +4,15 @@ const logger = debug('hitorilive:toObservable');
 import { Observable } from 'rxjs';
 import Peer from 'simple-peer';
 
-export function toObservableFromWebSocket(webSocket: WebSocket) {
+export function toObservableFromWebSocket(url: string) {
   return new Observable<ArrayBuffer>((subscriber) => {
+    const webSocket = new WebSocket(url);
+    webSocket.binaryType = 'arraybuffer';
     webSocket.onmessage = (ev) => {
-      if (ev.data instanceof ArrayBuffer) {
-        subscriber.next(ev.data);
-      } else if (ev.data instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          subscriber.next(reader.result);
-        };
-        reader.readAsArrayBuffer(ev.data);
-      } else {
+      if (!(ev.data instanceof ArrayBuffer)) {
         subscriber.error(new Error('Unsupported WebSocket'));
       }
+      subscriber.next(ev.data);
     };
     webSocket.onerror = (ev) => {
       subscriber.error(new Error('webSocket error'));

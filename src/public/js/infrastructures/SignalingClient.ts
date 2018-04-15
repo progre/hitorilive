@@ -2,7 +2,8 @@ import debug from 'debug';
 const log = debug('hitorilive:SignalingClient');
 
 import flvJS from 'flv.js';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
+import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
 import connectPeersClient from '../../../utils/connectPeersClient';
 import ObservableLoader from './ObservableLoader';
@@ -43,7 +44,7 @@ export default class SignalingClient {
       const path = payload.path!;
       return new this(
         webSocket,
-        toObservableFromWebSocket(new WebSocket(`ws://${host}${path}`)),
+        toObservableFromWebSocket(`ws://${host}${path}`),
       );
     }
     if ('tunnelId' in payload) {
@@ -127,10 +128,14 @@ export default class SignalingClient {
     tunnelId: string,
   ) {
     log(`tunnelId(${tunnelId}) Downstream WebRTC connecting...`);
-    const peer = await connectPeersClient(signalingWebSocket, tunnelId, {});
+    let peer: Peer.Instance | null = await connectPeersClient(signalingWebSocket, tunnelId, {});
     this.downstreamsCount += 1;
     log(`tunnelId(${tunnelId}) Connecting completed. downstreams(${this.downstreamsCount})`);
+
+    let subscription: Subscription;
     peer.on('close', () => {
+      subscription.unsubscribe();
+      peer = null;
       this.downstreamsCount -= 1;
       log(`tunnelId(${tunnelId}) Downstream closed. downstreams(${this.downstreamsCount})`);
     });
@@ -142,13 +147,21 @@ export default class SignalingClient {
       peer.destroy();
       return;
     }
-    this.replayableHeaders
+    subscription = this.replayableHeaders
       .concat(this.sharedUpstream)
       .subscribe({
-        next(buffer: ArrayBuffer) { peer.send(buffer); },
+        next(buffer: ArrayBuffer) {
+          if (peer == null) {
+            return;
+          }
+          peer.send(buffer);
+        },
         error(err: Error) { console.error(err.message, err.stack || err); },
         complete() {
           log(`tunnelId(${tunnelId}) Upstream completed.`);
+          if (peer == null) {
+            return;
+          }
           peer.destroy();
         },
       });

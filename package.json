@@ -68,6 +68,7 @@
     "clean": "del-cli dist tmp",
     "commitmsg": "commitlint -e $GIT_PARAMS",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
+    "debug-start": "cross-env DEBUG=hitorilive:* electron .",
     "package": "electron-packer",
     "release-build": "cross-env NODE_ENV=production webpack --progress",
     "start": "electron .",
