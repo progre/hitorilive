@@ -90,9 +90,11 @@ export default class SignalingClient {
       }
     });
     this.flvPlayer = flvJS.createPlayer(
-      { type: 'flv' },
       {
+        type: 'flv',
         isLive: true,
+      },
+      {
         loader: new ObservableLoader(this.replayableHeaders.concat(this.sharedUpstream)),
       },
     );
