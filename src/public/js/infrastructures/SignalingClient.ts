@@ -172,13 +172,7 @@ export default class SignalingClient {
 }
 
 function getOptimizedSend() {
-  if (window.navigator.userAgent.toLowerCase().includes('firefox')) {
-    // Firefox can send large data.
-    return (peer: Peer.Instance, buffer: ArrayBuffer) => {
-      peer.send(buffer);
-    };
-  }
-  log('DataChannel separated sending.');
+  // Firefox×Firefox can send large data, but it can't send with Chrome.
   return (peer: Peer.Instance, buffer: ArrayBuffer) => {
     for (let i = 0; i < buffer.byteLength; i += 64 * 1024) {
       peer.send(buffer.slice(i, i + 64 * 1024));
