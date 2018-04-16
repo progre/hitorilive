@@ -149,23 +149,39 @@ export default class SignalingClient {
       peer.destroy();
       return;
     }
+    const send = getOptimizedSend();
     subscription = this.replayableHeaders
       .concat(this.sharedUpstream)
       .subscribe({
-        next(buffer: ArrayBuffer) {
-          if (peer == null) {
+        next: (buffer: ArrayBuffer) => {
+          if (peer == null || (<any>peer)._channel.readyState !== 'open') {
             return;
           }
-          peer.send(buffer);
+          send(peer, buffer);
         },
         error(err: Error) { console.error(err.message, err.stack || err); },
         complete() {
           log(`tunnelId(${tunnelId}) Upstream completed.`);
-          if (peer == null) {
+          if (peer == null || (<any>peer)._channel.readyState !== 'open') {
             return;
           }
           peer.destroy();
         },
       });
   }
+}
+
+function getOptimizedSend() {
+  if (window.navigator.userAgent.toLowerCase().includes('firefox')) {
+    // Firefox can send large data.
+    return (peer: Peer.Instance, buffer: ArrayBuffer) => {
+      peer.send(buffer);
+    };
+  }
+  log('DataChannel separated sending.');
+  return (peer: Peer.Instance, buffer: ArrayBuffer) => {
+    for (let i = 0; i < buffer.byteLength; i += 64 * 1024) {
+      peer.send(buffer.slice(i, i + 64 * 1024));
+    }
+  };
 }
