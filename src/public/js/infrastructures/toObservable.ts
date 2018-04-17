@@ -11,6 +11,7 @@ export function toObservableFromWebSocket(url: string) {
     webSocket.onmessage = (ev) => {
       if (!(ev.data instanceof ArrayBuffer)) {
         subscriber.error(new Error('Unsupported WebSocket'));
+        return;
       }
       subscriber.next(ev.data);
     };

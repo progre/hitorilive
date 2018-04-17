@@ -50,9 +50,9 @@ export default class SignalingClient {
     if ('tunnelId' in payload) {
       const tunnelId = payload.tunnelId!;
       // TODO: stun経由
-      log('WebRTC connecting...');
+      log(`tunnelId(${tunnelId}) Upstream WebRTC connecting...`);
       const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
-      log('Connecting completed. Receive from WebRTC');
+      log(`tunnelId(${tunnelId}) Connecting completed. Receive from WebRTC`);
       return new this(
         webSocket,
         toObservableFromPeer(peer),
@@ -161,7 +161,7 @@ export default class SignalingClient {
         },
         error(err: Error) { console.error(err.message, err.stack || err); },
         complete() {
-          log(`tunnelId(${tunnelId}) Upstream completed.`);
+          log(`tunnelId(${tunnelId}) Downstream completed.`);
           if (peer == null || (<any>peer)._channel.readyState !== 'open') {
             return;
           }

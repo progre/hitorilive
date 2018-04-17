@@ -10,7 +10,7 @@ export default class ObservableLoader extends flvJS.BaseLoader {
   constructor(
     private observable: Observable<ArrayBuffer>,
   ) {
-    super('data-channel-loader');
+    super('observable-loader');
     this._needStash = true;
   }
 
@@ -64,6 +64,9 @@ export default class ObservableLoader extends flvJS.BaseLoader {
   }
 
   private dispatchArrayBuffer(arraybuffer: ArrayBuffer) {
+    if (this._status !== LoaderStatus.kIdle && !this.isWorking()) {
+      throw new Error('logic error');
+    }
     const chunk = arraybuffer;
     const byteStart = this.receivedLength;
     this.receivedLength += chunk.byteLength;
