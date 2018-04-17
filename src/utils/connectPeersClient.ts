@@ -1,13 +1,14 @@
+import { Observable } from 'rxjs';
 import Peer from 'simple-peer';
 import { TunnelMessage } from './connectPeersTypes';
 export type ConnectPeersServerMessage = TunnelMessage;
 
-export default async function connectPeersClient(
+export default function connectPeersClient(
   webSocket: WebSocket,
   tunnelId: string,
   opts: Peer.Options,
 ) {
-  return new Promise<Peer.Instance>((resolve, reject) => {
+  return new Observable<Peer.Instance>((subscribe) => {
     const peer = new Peer(opts);
     const signalHandler = (signal: any) => {
       webSocket.send(JSON.stringify({
@@ -31,12 +32,13 @@ export default async function connectPeersClient(
         type: 'tunnelComplete',
         payload: { tunnelId },
       }));
-      resolve(peer);
+      subscribe.next(peer);
+      subscribe.complete();
     };
     peer.once('connect', connectHandler);
     const errorHandler = (err: Error) => {
       removeAllListeners();
-      reject(err);
+      subscribe.error(err);
     };
     peer.once('error', errorHandler);
     removeAllListeners = () => {

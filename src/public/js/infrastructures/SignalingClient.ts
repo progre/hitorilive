@@ -7,7 +7,6 @@ import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
 import connectPeersClient from '../../../utils/connectPeersClient';
 import ObservableLoader from './ObservableLoader';
-import { toObservableFromPeer, toObservableFromWebSocket } from './toObservable';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
@@ -21,49 +20,7 @@ export default class SignalingClient {
 
   readonly onClose = new Subject<void>();
 
-  static async create(host: string) {
-    type Return = { webSocket: WebSocket; data: ServerSignalingMessage };
-    // TODO: promiseではmessageを取りこぼす疑いがある
-    const { webSocket, data: { type, payload } } = await new Promise<Return>((resolve, reject) => {
-      const ws = new WebSocket(`ws://${host}/join`);
-      ws.onerror = (ev) => {
-        ws.onerror = null;
-        ws.onmessage = null;
-        ws.close();
-        reject(new Error('Signaling websocket emitted an error.'));
-      };
-      ws.onmessage = (ev) => {
-        ws.onerror = null;
-        ws.onmessage = null;
-        resolve({ webSocket: ws, data: JSON.parse(ev.data) });
-      };
-    });
-    if (type !== 'upstream') {
-      throw new Error('logic error');
-    }
-    if ('path' in payload) {
-      log('Receive from WebSocket');
-      const path = payload.path!;
-      return new this(
-        webSocket,
-        toObservableFromWebSocket(`ws://${host}${path}`),
-      );
-    }
-    if ('tunnelId' in payload) {
-      const tunnelId = payload.tunnelId!;
-      // TODO: stun経由
-      log(`tunnelId(${tunnelId}) Upstream WebRTC connecting...`);
-      const peer = await connectPeersClient(webSocket, tunnelId, { initiator: true });
-      log(`tunnelId(${tunnelId}) Connecting completed. Receive from WebRTC`);
-      return new this(
-        webSocket,
-        toObservableFromPeer(peer),
-      );
-    }
-    throw new Error('logic error');
-  }
-
-  private constructor(
+  constructor(
     signalingWebSocket: WebSocket,
     upstream: Observable<ArrayBuffer>,
   ) {
@@ -76,6 +33,7 @@ export default class SignalingClient {
         signalingWebSocket.close();
       },
       complete: () => {
+        log(`Upstream completed. Reset signaling...`);
         this.publishedUpstream = undefined;
         // when close upstream then close signaling
         signalingWebSocket.close();
@@ -115,66 +73,72 @@ export default class SignalingClient {
       this.onClose.next();
       this.onClose.complete();
     };
-    signalingWebSocket.onmessage = async (ev) => {
-      try {
-        const { type, payload }: ServerSignalingMessage = JSON.parse(ev.data);
-        if (type !== 'downstream') {
-          return;
-        }
-        if (payload.tunnelId == null) {
-          throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
-        }
-        await this.connectDownstream(signalingWebSocket, payload.tunnelId);
-      } catch (err) {
-        console.error(err);
+    signalingWebSocket.onmessage = (ev) => {
+      const { type, payload }: ServerSignalingMessage = JSON.parse(ev.data);
+      if (type !== 'downstream') {
+        return;
       }
+      if (payload.tunnelId == null) {
+        throw new Error(`logic error (type=${type} payload=${JSON.stringify(payload)})`);
+      }
+      this.connectDownstream(signalingWebSocket, payload.tunnelId);
     };
   }
 
-  private async connectDownstream(
-    signalingWebSocket: WebSocket,
-    tunnelId: string,
-  ) {
+  private connectDownstream(signalingWebSocket: WebSocket, tunnelId: string) {
     log(`tunnelId(${tunnelId}) Downstream WebRTC connecting...`);
-    let peer: Peer.Instance | null = await connectPeersClient(signalingWebSocket, tunnelId, {});
     this.downstreamsCount += 1;
-    log(`tunnelId(${tunnelId}) Connecting completed. downstreams(${this.downstreamsCount})`);
-
-    let subscription: Subscription;
-    peer.on('close', () => {
-      subscription.unsubscribe();
-      peer = null;
-      this.downstreamsCount -= 1;
-      log(`tunnelId(${tunnelId}) Downstream closed. downstreams(${this.downstreamsCount})`);
-    });
-    peer.on('error', (err) => {
-      console.error(err.message, err.stack || err);
-    });
-    if (this.publishedUpstream == null) {
-      // stream already closed
-      peer.destroy();
-      return;
-    }
-    const send = getOptimizedSend();
-    subscription = this.replayableHeaders
-      .concat(this.publishedUpstream)
-      .subscribe({
-        next: (buffer: ArrayBuffer) => {
-          if (peer == null || (<any>peer)._channel.readyState !== 'open') {
-            return;
-          }
-          send(peer, buffer);
-        },
-        error(err: Error) { console.error(err.message, err.stack || err); },
-        complete() {
-          log(`tunnelId(${tunnelId}) Downstream completed.`);
-          if (peer == null || (<any>peer)._channel.readyState !== 'open') {
-            return;
-          }
+    connectPeersClient(signalingWebSocket, tunnelId, {})
+      .flatMap((peer) => {
+        log(`tunnelId(${tunnelId}) Connecting completed. downstreams(${this.downstreamsCount})`);
+        if (this.publishedUpstream == null) {
+          // stream already closed
           peer.destroy();
+          return Observable.of({});
+        }
+        const stream = this.replayableHeaders.concat(this.publishedUpstream);
+        return transfer(stream, peer);
+      })
+      .subscribe({
+        error: (err) => {
+          this.downstreamsCount -= 1;
+          console.error(err.message, err.stack || err);
+        },
+        complete: () => {
+          this.downstreamsCount -= 1;
+          log(`tunnelId(${tunnelId}) Downstream closed. downstreams(${this.downstreamsCount})`);
         },
       });
   }
+}
+
+function transfer(upstream: Observable<ArrayBuffer>, peer: Peer.Instance) {
+  return new Observable((subscribe) => {
+    const send = getOptimizedSend();
+    const subscription = upstream.subscribe({
+      next: (buffer: ArrayBuffer) => {
+        if ((<any>peer).destroyed || (<any>peer)._channel.readyState !== 'open') {
+          return;
+        }
+        send(peer, buffer);
+      },
+      error(err: Error) {
+        console.error(err.message, err.stack || err);
+        peer.destroy();
+      },
+      complete() {
+        peer.destroy();
+      },
+    });
+    peer.on('close', () => {
+      subscription.unsubscribe();
+      subscribe.complete();
+    });
+    peer.on('error', (err) => {
+      subscription.unsubscribe();
+      subscribe.error(err);
+    });
+  });
 }
 
 function getOptimizedSend() {

@@ -4,6 +4,7 @@ import { action, observable, runInAction } from 'mobx';
 import { sync as uid } from 'uid-safe';
 import { Message } from '../../commons/types';
 import API from './infrastructures/API';
+import createSignalingClient from './infrastructures/createSignalingClient';
 import SignalingClient from './infrastructures/SignalingClient';
 
 export default class Store {
@@ -20,7 +21,7 @@ export default class Store {
       (x) => { this.addMessages(x); },
       handleError,
     );
-    this.initSignalingClient().catch(handleError);
+    this.initSignalingClient();
   }
 
   postMessage(message: string) {
@@ -30,21 +31,26 @@ export default class Store {
   @action
   cleanUpPlayer() {
     this.flvPlayer = undefined;
-    this.initSignalingClient().catch(handleError);
+    this.initSignalingClient();
   }
 
-  private async initSignalingClient(): Promise<void> {
-    try {
-      this.signalingClient = await SignalingClient.create(location.host);
-      this.signalingClient.onClose.subscribe(() => { this.cleanUpPlayer(); });
-    } catch (err) {
-      handleError(err);
-      await new Promise((resolve, reject) => { setTimeout(resolve, 3000); });
-      return this.initSignalingClient();
-    }
-    runInAction(() => {
-      this.flvPlayer = this.signalingClient.flvPlayer;
-    });
+  private initSignalingClient() {
+    createSignalingClient(location.host).subscribe(
+      (signalingClient) => {
+        this.signalingClient = signalingClient;
+        this.signalingClient.onClose.subscribe(() => { this.cleanUpPlayer(); });
+        runInAction(() => {
+          this.flvPlayer = this.signalingClient.flvPlayer;
+        });
+      },
+      (err) => {
+        handleError(err);
+        setTimeout(
+          () => { this.initSignalingClient(); },
+          3000,
+        );
+      },
+    );
   }
 
   @action
