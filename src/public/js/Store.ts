@@ -1,3 +1,6 @@
+import debug from 'debug';
+const log = debug('hitorilive:Store');
+
 // tslint:disable-next-line:no-implicit-dependencies
 import flvJS from 'flv.js';
 import { action, observable, runInAction } from 'mobx';
@@ -38,7 +41,10 @@ export default class Store {
     createSignalingClient(location.host).subscribe(
       (signalingClient) => {
         this.signalingClient = signalingClient;
-        this.signalingClient.onClose.subscribe(() => { this.cleanUpPlayer(); });
+        this.signalingClient.onClose.subscribe(() => {
+          log('SignalingClient closed. retry....');
+          this.cleanUpPlayer();
+        });
         runInAction(() => {
           this.flvPlayer = this.signalingClient.flvPlayer;
         });

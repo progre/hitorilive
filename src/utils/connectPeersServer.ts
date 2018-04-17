@@ -69,18 +69,13 @@ export default async function connectPeersServer(
       removeAllListeners();
       resolve();
     };
-    const closeAll = () => {
-      upstream.close();
-      downstream.close();
-    };
     const errorHandler = (ev: { error: any; message: any; type: string; target: WebSocket }) => {
       removeAllListeners();
-      closeAll();
+      ev.target.close();
       reject(new Error(`connectPeers failed. reason: ${ev.message}, ${ev.error}`));
     };
     const closeHandler = (ev: { reason: string }) => {
       removeAllListeners();
-      closeAll();
       reject(new Error(`connectPeers failed. reason: socket closed(${ev.reason}).`));
     };
 
