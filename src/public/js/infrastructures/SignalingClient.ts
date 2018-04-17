@@ -2,7 +2,7 @@ import debug from 'debug';
 const log = debug('hitorilive:SignalingClient');
 
 import flvJS from 'flv.js';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { ConnectableObservable, Observable, Subject, Subscription } from 'rxjs';
 import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
 import connectPeersClient from '../../../utils/connectPeersClient';
@@ -13,8 +13,10 @@ export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
 
 export default class SignalingClient {
   readonly flvPlayer: FLVPlayer;
-  private readonly replayableHeaders: Observable<ArrayBuffer>;
-  private sharedUpstream?: Observable<ArrayBuffer>;
+  private readonly replayableHeaders: ConnectableObservable<ArrayBuffer>;
+  private readonly replayableHeadersSubscription: Subscription;
+  private publishedUpstream?: ConnectableObservable<ArrayBuffer>;
+  private readonly publishedUpstreamSubscription: Subscription;
   private downstreamsCount = 0;
 
   readonly onClose = new Subject<void>();
@@ -65,21 +67,23 @@ export default class SignalingClient {
     signalingWebSocket: WebSocket,
     upstream: Observable<ArrayBuffer>,
   ) {
-    this.sharedUpstream = upstream.share();
-    this.sharedUpstream.subscribe({
+    this.publishedUpstream = upstream.publish();
+    this.publishedUpstreamSubscription = this.publishedUpstream.connect();
+    this.publishedUpstream.subscribe({
       error: (err: Error) => {
         console.error(err.message, err.stack || err);
-        this.sharedUpstream = undefined;
+        this.publishedUpstream = undefined;
         signalingWebSocket.close();
       },
       complete: () => {
-        this.sharedUpstream = undefined;
+        this.publishedUpstream = undefined;
         // when close upstream then close signaling
         signalingWebSocket.close();
       },
     });
 
-    this.replayableHeaders = this.sharedUpstream.take(4).shareReplay();
+    this.replayableHeaders = this.publishedUpstream.take(4).publishReplay();
+    this.replayableHeadersSubscription = this.replayableHeaders.connect();
     this.replayableHeaders.first().subscribe((header) => {
       const expected = [
         0x46, 0x4C, 0x56, 0x01, 0x05, 0x00, 0x00, 0x00,
@@ -95,7 +99,7 @@ export default class SignalingClient {
         isLive: true,
       },
       {
-        loader: new ObservableLoader(this.replayableHeaders.concat(this.sharedUpstream)),
+        loader: new ObservableLoader(this.replayableHeaders.concat(this.publishedUpstream)),
       },
     );
 
@@ -106,6 +110,8 @@ export default class SignalingClient {
     };
     signalingWebSocket.onclose = (ev) => {
       signalingWebSocket.onclose = null;
+      this.replayableHeadersSubscription.unsubscribe();
+      this.publishedUpstreamSubscription.unsubscribe();
       this.onClose.next();
       this.onClose.complete();
     };
@@ -144,14 +150,14 @@ export default class SignalingClient {
     peer.on('error', (err) => {
       console.error(err.message, err.stack || err);
     });
-    if (this.sharedUpstream == null) {
+    if (this.publishedUpstream == null) {
       // stream already closed
       peer.destroy();
       return;
     }
     const send = getOptimizedSend();
     subscription = this.replayableHeaders
-      .concat(this.sharedUpstream)
+      .concat(this.publishedUpstream)
       .subscribe({
         next: (buffer: ArrayBuffer) => {
           if (peer == null || (<any>peer)._channel.readyState !== 'open') {
