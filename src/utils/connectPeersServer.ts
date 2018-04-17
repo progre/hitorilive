@@ -69,21 +69,35 @@ export default async function connectPeersServer(
       removeAllListeners();
       resolve();
     };
-    const errorHandler = () => {
+    const closeAll = () => {
+      upstream.close();
+      downstream.close();
+    };
+    const errorHandler = (ev: { error: any; message: any; type: string; target: WebSocket }) => {
       removeAllListeners();
-      reject(new Error('connectPeers failed.'));
+      closeAll();
+      reject(new Error(`connectPeers failed. reason: ${ev.message}, ${ev.error}`));
+    };
+    const closeHandler = (ev: { reason: string }) => {
+      removeAllListeners();
+      closeAll();
+      reject(new Error(`connectPeers failed. reason: socket closed(${ev.reason}).`));
     };
 
     removeAllListeners = () => {
       upstream.removeEventListener('message', upstreamMessageHandler);
       upstream.removeEventListener('error', errorHandler);
+      upstream.removeEventListener('close', closeHandler);
       downstream.removeEventListener('message', downstreamMessageHandler);
       downstream.removeEventListener('error', errorHandler);
+      downstream.removeEventListener('close', closeHandler);
     };
     upstream.addEventListener('message', upstreamMessageHandler);
     upstream.addEventListener('error', errorHandler);
+    upstream.addEventListener('close', closeHandler);
     downstream.addEventListener('message', downstreamMessageHandler);
     downstream.addEventListener('error', errorHandler);
+    downstream.addEventListener('close', closeHandler);
     upstream.send(JSON.stringify({ type: 'downstream', payload: { tunnelId } }));
     downstream.send(JSON.stringify({ type: 'upstream', payload: { tunnelId } }));
   });
