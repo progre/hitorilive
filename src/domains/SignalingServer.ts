@@ -1,8 +1,10 @@
+import debug from 'debug';
+const log = debug('hitorilive:SignalingServer');
 import http from 'http';
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
 import { ServerSignalingMessage } from '../commons/types';
-import connectPeersServer from '../utils/connectPeersServer';
+import connectPeersServer, { SocketClosedError } from '../utils/connectPeersServer';
 import Tree, { Peer } from './Tree';
 
 export default class SignalingServer {
@@ -33,7 +35,16 @@ export default class SignalingServer {
       this.joinToRoot(socket, id, parent);
       return;
     }
-    await this.joinToPeer(socket, id, parent);
+    try {
+      await this.joinToPeer(socket, id, parent);
+    } catch (e) {
+      if (e instanceof SocketClosedError) {
+        log(e.message);
+        socket.close();
+        return;
+      }
+      throw e;
+    }
   }
 
   private joinToRoot(socket: WebSocket, id: string, parent: { id: string }) {

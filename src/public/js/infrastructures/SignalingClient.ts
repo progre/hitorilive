@@ -102,7 +102,11 @@ export default class SignalingClient {
       .subscribe({
         error: (err) => {
           this.downstreamsCount -= 1;
-          console.error(err.message, err.stack || err);
+          log(
+            `tunnelId(${tunnelId}) Downstream closed with error.`
+            + ` downstreams(${this.downstreamsCount})`,
+          );
+          console.error(err);
         },
         complete: () => {
           this.downstreamsCount -= 1;

@@ -6,6 +6,13 @@ import WebSocket from 'ws';
 import { TunnelCompletedMessage, TunnelMessage } from './connectPeersTypes';
 export type ConnectPeersClientMessage = TunnelMessage | TunnelCompletedMessage;
 
+export class SocketClosedError extends Error {
+  name = 'SocketClosedError';
+}
+
+/**
+ * @throws SocketClosedError
+ */
 export default async function connectPeersServer(
   upstream: WebSocket,
   downstream: WebSocket,
@@ -76,7 +83,7 @@ export default async function connectPeersServer(
     };
     const closeHandler = (ev: { reason: string }) => {
       removeAllListeners();
-      reject(new Error(`connectPeers failed. reason: socket closed(${ev.reason}).`));
+      reject(new SocketClosedError(`connectPeers failed. reason: socket closed(${ev.reason}).`));
     };
 
     removeAllListeners = () => {
