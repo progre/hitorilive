@@ -72,6 +72,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
         <video
           style={centerCSS}
           id="video"
+          autoPlay={true}
           onLoadedMetadata={this.onLoadedMetadata}
           onEmptied={this.onEmptied}
         ></video>
