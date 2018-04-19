@@ -87,7 +87,7 @@ function connect(
     one[0].connected = true;
     return true;
   }
-  return tree.children.map(x => connect(tree, client, parent))[0] || false;
+  return tree.children.map(x => connect(x, client, parent))[0] || false;
 }
 
 function remove(tree: PeerTree, client: { id: string }): void {

@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import Peer from 'simple-peer';
-import { TunnelMessage } from './connectPeersTypes';
-export type ConnectPeersServerMessage = TunnelMessage;
+import { TunnelCompletedMessage, TunnelMessage } from './connectPeersTypes';
 
 export default function connectPeersClient(
   webSocket: WebSocket,
@@ -19,7 +18,7 @@ export default function connectPeersClient(
       };
       peer.on('signal', signalHandler);
       const messageHandler = (ev: MessageEvent) => {
-        const data: ConnectPeersServerMessage = JSON.parse(ev.data);
+        const data: TunnelMessage = JSON.parse(ev.data);
         if (data.type !== 'tunnel' || data.payload.tunnelId !== tunnelId) {
           return;
         }
@@ -29,8 +28,9 @@ export default function connectPeersClient(
       let removeAllListeners: Function;
       const connectHandler = () => {
         removeAllListeners();
-        webSocket.send(JSON.stringify({
-          type: 'tunnelComplete',
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        webSocket.send(JSON.stringify(<TunnelCompletedMessage>{
+          type: 'tunnelCompleted',
           payload: { tunnelId },
         }));
         subscribe.next(peer);
