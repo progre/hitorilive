@@ -88,7 +88,11 @@ export default class SignalingClient {
   private connectDownstream(signalingWebSocket: WebSocket, tunnelId: string) {
     log(`tunnelId: ${tunnelId}, Downstream WebRTC connecting...`);
     this.downstreamsCount += 1;
-    connectPeersClient(signalingWebSocket, tunnelId, {})
+    connectPeersClient(
+      signalingWebSocket,
+      tunnelId,
+      { channelConfig: { maxPacketLifeTime: 10 * 1000 } },
+    )
       .flatMap((peer) => {
         log(`tunnelId: ${tunnelId}, Connecting completed. downstreams: ${this.downstreamsCount}`);
         if (this.publishedUpstream == null) {
