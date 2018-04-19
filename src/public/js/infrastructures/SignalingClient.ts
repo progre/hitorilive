@@ -86,11 +86,11 @@ export default class SignalingClient {
   }
 
   private connectDownstream(signalingWebSocket: WebSocket, tunnelId: string) {
-    log(`tunnelId(${tunnelId}) Downstream WebRTC connecting...`);
+    log(`tunnelId: ${tunnelId}, Downstream WebRTC connecting...`);
     this.downstreamsCount += 1;
     connectPeersClient(signalingWebSocket, tunnelId, {})
       .flatMap((peer) => {
-        log(`tunnelId(${tunnelId}) Connecting completed. downstreams(${this.downstreamsCount})`);
+        log(`tunnelId: ${tunnelId}, Connecting completed. downstreams: ${this.downstreamsCount}`);
         if (this.publishedUpstream == null) {
           // stream already closed
           peer.destroy();
@@ -103,14 +103,14 @@ export default class SignalingClient {
         error: (err) => {
           this.downstreamsCount -= 1;
           log(
-            `tunnelId(${tunnelId}) Downstream closed with error.`
-            + ` downstreams(${this.downstreamsCount})`,
+            `tunnelId: ${tunnelId}, Downstream closed with error.`
+            + ` downstreams: ${this.downstreamsCount}`,
           );
           console.error(err);
         },
         complete: () => {
           this.downstreamsCount -= 1;
-          log(`tunnelId(${tunnelId}) Downstream closed. downstreams(${this.downstreamsCount})`);
+          log(`tunnelId: ${tunnelId}, Downstream closed. downstreams: ${this.downstreamsCount}`);
         },
       });
   }

@@ -32,7 +32,7 @@ export default function createSignalingClient(host: string) {
     .flatMap(({ webSocket, data }) => {
       if ('path' in data.payload) {
         log('Receive from WebSocket');
-        const path = data.payload.path!;
+        const path = data.payload.path;
         return Observable.of(
           new SignalingClient(
             webSocket,
@@ -42,11 +42,10 @@ export default function createSignalingClient(host: string) {
       }
       if ('tunnelId' in data.payload) {
         const tunnelId = data.payload.tunnelId!;
-        // TODO: stun経由
-        log(`tunnelId(${tunnelId}) Upstream WebRTC connecting...`);
+        log(`tunnelId: ${tunnelId}, Upstream WebRTC connecting...`);
         return connectPeersClient(webSocket, tunnelId, { initiator: true })
           .map((peer) => {
-            log(`tunnelId(${tunnelId}) Connecting completed. Receive from WebRTC`);
+            log(`tunnelId: ${tunnelId}, Connecting completed. Receive from WebRTC`);
             return new SignalingClient(
               webSocket,
               toObservableFromPeer(peer),

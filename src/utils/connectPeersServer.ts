@@ -32,7 +32,7 @@ export default async function connectPeersServer(
       }
       switch (type) {
         case 'tunnel': {
-          log(`tunnelId(${tunnelId}) Signaling message upstream -> downstream`);
+          log(`tunnelId: ${tunnelId}, Signaling message upstream -> downstream`);
           downstream.send(ev.data);
           return;
         }
@@ -55,7 +55,7 @@ export default async function connectPeersServer(
       }
       switch (type) {
         case 'tunnel': {
-          log(`tunnelId(${tunnelId}) Signaling message downstream -> upstream`);
+          log(`tunnelId: ${tunnelId}, Signaling message downstream -> upstream`);
           upstream.send(ev.data);
           return;
         }
@@ -83,7 +83,7 @@ export default async function connectPeersServer(
     };
     const closeHandler = (ev: { reason: string }) => {
       removeAllListeners();
-      reject(new SocketClosedError(`connectPeers failed. reason: socket closed(${ev.reason}).`));
+      reject(new SocketClosedError(`connectPeers failed. reason: socket closed (${ev.reason}).`));
     };
 
     removeAllListeners = () => {

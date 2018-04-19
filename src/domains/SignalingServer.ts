@@ -9,6 +9,7 @@ import Tree, { Peer } from './Tree';
 
 export default class SignalingServer {
   private readonly tree = new Tree();
+  private tunnelCount = 0;
 
   constructor(
     private readonly mediaPath: string,
@@ -36,6 +37,8 @@ export default class SignalingServer {
       return;
     }
     try {
+      this.tunnelCount += 1;
+      log(`tunnelCount: ${this.tunnelCount}`);
       await this.joinToPeer(socket, id, parent);
     } catch (e) {
       if (e instanceof SocketClosedError) {
@@ -44,6 +47,9 @@ export default class SignalingServer {
         return;
       }
       throw e;
+    } finally {
+      this.tunnelCount -= 1;
+      log(`tunnelCount: ${this.tunnelCount}`);
     }
   }
 
