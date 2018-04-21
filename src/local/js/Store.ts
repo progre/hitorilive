@@ -5,9 +5,12 @@ import { sync as uid } from 'uid-safe';
 import { Message, Settings } from '../../commons/types';
 
 export default class Store {
+  // TODO: object化。?はいらなそう
   @observable rtmpPort?: number;
   @observable httpPort?: number;
   @observable useUpnp?: boolean;
+  @observable enableP2PStreamRelay!: boolean;
+  @observable directlyConnectionLimit!: number;
   @observable latestError?: string;
   @observable listeners = 0;
   @observable chat = {
@@ -15,14 +18,10 @@ export default class Store {
   };
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
-    this.rtmpPort = settings.rtmpPort;
-    this.httpPort = settings.httpPort;
-    this.useUpnp = settings.useUpnp;
+    this.setSettings(settings);
 
     ipcRenderer.on('setSettings', action((_: any, value: Settings) => {
-      this.rtmpPort = value.rtmpPort;
-      this.httpPort = value.httpPort;
-      this.useUpnp = value.useUpnp;
+      this.setSettings(value);
     }));
 
     ipcRenderer.on('error', action((_: any, value: string) => {
@@ -49,6 +48,14 @@ export default class Store {
     }));
   }
 
+  private setSettings(settings: Settings) {
+    this.rtmpPort = settings.rtmpPort;
+    this.httpPort = settings.httpPort;
+    this.useUpnp = settings.useUpnp;
+    this.enableP2PStreamRelay = settings.enableP2PStreamRelay;
+    this.directlyConnectionLimit = settings.directlyConnectionLimit;
+  }
+
   setRTMPPort(value: number) {
     this.ipcRenderer.send('setRTMPPort', value);
   }
@@ -59,6 +66,14 @@ export default class Store {
 
   setUseUpnpPortMapping(value: boolean) {
     this.ipcRenderer.send('setUseUpnpPortMapping', value);
+  }
+
+  setEnableP2PStreamRelay(value: boolean) {
+    this.ipcRenderer.send('setEnableP2PStreamRelay', value);
+  }
+
+  setDirectlyConnectionLimit(value: number) {
+    this.ipcRenderer.send('setDirectlyConnectionLimit', value);
   }
 
   @action clearError() {

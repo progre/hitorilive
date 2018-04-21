@@ -19,8 +19,6 @@ export default class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
-    this.signalingServer = new SignalingServer('/live/.flv');
-
     this.listenServerEvents(this.serverUnion);
     this.listenGUIEvents(ipcMain);
 
@@ -83,10 +81,33 @@ export default class App {
     ipcMain.on('addMessage', (_: any, value: { id: string; message: string }) => {
       this.chat.addMessage(value);
     });
+    ipcMain.on('setEnableP2PStreamRelay', (_: any, value: boolean) => {
+      this.settings.enableP2PStreamRelay = value;
+      this.settingsRepo.set(this.settings).catch(this.handleError);
+      updateServerDirectlyConnectionLimit(this.signalingServer, this.settings);
+      this.webContents.send('setSettings', this.settings);
+    });
+    ipcMain.on('setDirectlyConnectionLimit', (_: any, value: number) => {
+      this.settings.directlyConnectionLimit = value;
+      this.settingsRepo.set(this.settings).catch(this.handleError);
+      updateServerDirectlyConnectionLimit(this.signalingServer, this.settings);
+      this.webContents.send('setSettings', this.settings);
+    });
   }
 
   private handleError(e: Error) {
     console.error(e.stack || e);
     this.webContents.send('error', e.message || e);
+  }
+}
+
+function updateServerDirectlyConnectionLimit(
+  signalingServer: SignalingServer,
+  settings: Settings,
+) {
+  if (settings.enableP2PStreamRelay) {
+    signalingServer.setDirectlyConnectionLimit(settings.directlyConnectionLimit);
+  } else {
+    signalingServer.setDirectlyConnectionLimit(Infinity);
   }
 }

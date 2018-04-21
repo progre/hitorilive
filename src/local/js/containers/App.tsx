@@ -8,11 +8,21 @@ import Store from '../Store';
 export default class App extends React.Component<{ store: Store }> {
   constructor(props: any, context?: any) {
     super(props, context);
+    this.onEnableP2PStreamRelayChange = this.onEnableP2PStreamRelayChange.bind(this);
+    this.onDirectlyConnectionLimitChange = this.onDirectlyConnectionLimitChange.bind(this);
     this.onChangeRTMP = this.onChangeRTMP.bind(this);
     this.onChangeHTTP = this.onChangeHTTP.bind(this);
     this.onCloseError = this.onCloseError.bind(this);
     this.onCheckUpnp = this.onCheckUpnp.bind(this);
     this.onPost = this.onPost.bind(this);
+  }
+
+  private onEnableP2PStreamRelayChange(e: ChangeEvent<HTMLInputElement>) {
+    this.props.store.setEnableP2PStreamRelay(e.target.checked);
+  }
+
+  private onDirectlyConnectionLimitChange(e: ChangeEvent<HTMLInputElement>) {
+    this.props.store.setDirectlyConnectionLimit(e.target.valueAsNumber);
   }
 
   private onChangeRTMP(e: ChangeEvent<HTMLInputElement>) {
@@ -44,6 +54,12 @@ export default class App extends React.Component<{ store: Store }> {
         padding: 8,
       }}>
         <div>
+          <P2PSettings
+            enableP2PStreamRelay={this.props.store.enableP2PStreamRelay}
+            directlyConnectionLimit={this.props.store.directlyConnectionLimit}
+            onEnableP2PStreamRelayChange={this.onEnableP2PStreamRelayChange}
+            onDirectlyConnectionLimitChange={this.onDirectlyConnectionLimitChange}
+          />
           <div>
             <Snackbar
               anchorOrigin={{
@@ -104,4 +120,51 @@ export default class App extends React.Component<{ store: Store }> {
       </div>
     );
   }
+}
+
+function P2PSettings(props: {
+  enableP2PStreamRelay: boolean;
+  directlyConnectionLimit: number;
+
+  onEnableP2PStreamRelayChange(e: ChangeEvent<HTMLInputElement>): void;
+  onDirectlyConnectionLimitChange(e: ChangeEvent<HTMLInputElement>): void;
+}) {
+  return (
+    <div>
+      <FormControlLabel
+        control={
+          <Checkbox
+            color="primary"
+            checked={props.enableP2PStreamRelay}
+            onChange={props.onEnableP2PStreamRelayChange}
+          />
+        }
+        label="(Expermental) Enable P2P stream relay"
+      />
+      <TextField
+        label="Directs"
+        disabled={!props.enableP2PStreamRelay}
+        value={
+          !props.enableP2PStreamRelay
+            ? '∞'
+            : props.directlyConnectionLimit
+        }
+        onChange={props.onDirectlyConnectionLimitChange}
+        type={
+          !props.enableP2PStreamRelay
+            ? 'string'
+            : 'number'
+        }
+        inputProps={{
+          min: 1,
+        }}
+        InputLabelProps={{
+          shrink: true,
+        }}
+        style={{
+          marginLeft: '2em',
+        }}
+      />
+    </div>
+  );
 }

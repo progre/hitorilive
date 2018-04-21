@@ -16,6 +16,10 @@ export default class SignalingServer {
   ) {
   }
 
+  setDirectlyConnectionLimit(capacity: number) {
+    this.tree.getRoot().item.capacity = capacity;
+  }
+
   async join(socket: WebSocket) {
     if (socket.readyState !== WebSocket.OPEN) {
       throw new Error('logic error');

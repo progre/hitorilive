@@ -5,7 +5,7 @@ import WebSocket from 'ws';
 
 // Since most methods are recursive,
 // so thier can't be included as instance methods.
-interface PeerTree {
+export interface PeerTree {
   // parent?: TreeCollection<T>;
   readonly item: Peer;
   children: ReadonlyArray<PeerTree>;
@@ -13,6 +13,7 @@ interface PeerTree {
 
 export interface Peer {
   id: string;
+  capacity: number;
   connected: boolean;
   socket?: WebSocket;
 }
@@ -24,9 +25,13 @@ export class PeerNotFoundError extends Error {
 export default class Tree {
   static readonly ROOT = '';
   private tree: PeerTree = {
-    item: { id: Tree.ROOT, connected: true },
+    item: { id: Tree.ROOT, capacity: 1, connected: true },
     children: [],
   };
+
+  getRoot() {
+    return this.tree;
+  }
 
   joinUnderParent(client: { id: string; socket: WebSocket }) {
     if (log.enabled) {
@@ -61,10 +66,10 @@ export default class Tree {
 }
 
 function joinUnderParent(tree: PeerTree, client: { id: string; socket: WebSocket }): Peer | null {
-  if (hasCapacity(tree.children)) {
+  if (hasCapacity(tree)) {
     tree.children = [
       ...tree.children,
-      { item: { ...client, connected: false }, children: [] },
+      { item: { ...client, capacity: 1, connected: false }, children: [] },
     ];
     return tree.item;
   }
@@ -97,8 +102,8 @@ function remove(tree: PeerTree, client: { id: string }): void {
   });
 }
 
-function hasCapacity(child: ReadonlyArray<PeerTree>) {
-  return child.length < 1;
+function hasCapacity(tree: PeerTree) {
+  return tree.children.length < tree.item.capacity;
 }
 
 function count(tree: Readonly<PeerTree>): number {

@@ -7,10 +7,13 @@ export interface Message {
   message: string;
 }
 
+// This should define properties flat for compatibility.
 export interface Settings {
   rtmpPort: number;
   httpPort: number;
   useUpnp: boolean;
+  enableP2PStreamRelay: boolean;
+  directlyConnectionLimit: number;
 }
 
 export type ClientSignalingMessage = ConnectPeersClientMessage;
