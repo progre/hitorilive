@@ -1,3 +1,4 @@
+import { t } from 'i18next';
 import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
@@ -66,14 +67,14 @@ export default class App extends React.Component<{ store: Store }> {
               message={<span>{this.props.store.latestError}</span>}
             />
             <TextField
-              label="RTMP Port"
+              label={t('rtmp-port')}
               type="number"
               inputProps={{ min: 0, max: 65535 }}
               value={this.props.store.settings.rtmpPort}
               onChange={this.onChangeRTMP}
             />
             <TextField
-              label="HTTP Port"
+              label={t('http-port')}
               type="number"
               inputProps={{ min: 0, max: 65535 }}
               value={this.props.store.settings.httpPort}
@@ -89,12 +90,12 @@ export default class App extends React.Component<{ store: Store }> {
                   onChange={this.onCheckUpnp}
                 />
               }
-              label="Use UPnP port mapping"
+              label={t('use-upnp-port-mapping')}
             />
           </div>
           <div>
             <TextField
-              label="Listeners"
+              label={t('listeners')}
               value={this.props.store.listeners}
               inputProps={{ readOnly: true }}
             />
@@ -122,10 +123,10 @@ function P2PSettings(props: {
             onChange={props.onEnableP2PStreamRelayChange}
           />
         }
-        label="(Expermental) Enable P2P stream relay"
+        label={t('enable-p2p-stream-relay')}
       />
       <TextField
-        label="Directs"
+        label={t('directs')}
         disabled={!props.enableP2PStreamRelay}
         value={
           !props.enableP2PStreamRelay

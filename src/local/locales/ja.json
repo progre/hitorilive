@@ -1,0 +1,8 @@
+{
+  "directs": "直下",
+  "enable-p2p-stream-relay": "(実験機能) P2P配信リレーを有効にする",
+  "listeners": "リスナー数",
+  "http-port": "HTTPポート",
+  "rtmp-port": "RTMPポート",
+  "use-upnp-port-mapping": "UPnPによるポート自動開放を行う"
+}

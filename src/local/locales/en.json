@@ -1,0 +1,8 @@
+{
+  "directs": "Directs",
+  "enable-p2p-stream-relay": "(Expermental) Enable P2P stream relay",
+  "listeners": "Listeners",
+  "http-port": "HTTP Port",
+  "rtmp-port": "RTMP Port",
+  "use-upnp-port-mapping": "Use UPnP port mapping"
+}

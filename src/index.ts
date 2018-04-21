@@ -12,6 +12,14 @@ async function main() {
 
   electron.app.on('window-all-closed', electron.app.quit.bind(electron.app));
   const win = new electron.BrowserWindow({
+    webPreferences: {
+      defaultFontFamily: {
+        standard: 'Yu Gothic UI',
+        serif: 'Yu Mincho',
+        sansSerif: 'Yu Gothic UI',
+        monospace: 'MS Gothic',
+      },
+    },
     width: 640,
     height: 360,
     resizable: true,
