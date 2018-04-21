@@ -1,14 +1,12 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcMain, WebContents } from 'electron';
 import { Settings } from '../commons/types';
-import Chat from '../domains/Chat';
 import SignalingServer from '../domains/SignalingServer';
 import ServerUnion from '../infrastructures/ServerUnion';
 import SettingsRepo from '../infrastructures/SettingsRepo';
 
 export default class App {
-  private readonly chat = new Chat();
-  readonly serverUnion = new ServerUnion(this.chat, 'HitoriLive');
+  readonly serverUnion = new ServerUnion('HitoriLive');
   private readonly signalingServer = new SignalingServer('/live/.flv');
 
   constructor(
@@ -22,10 +20,6 @@ export default class App {
     this.listenServerEvents(this.serverUnion);
     this.listenSignalingServerEvents(this.signalingServer);
     this.listenGUIEvents(ipcMain);
-
-    this.chat.onMessage.subscribe((message) => {
-      this.webContents.send('addMessage', message);
-    });
   }
 
   isRunning() {
@@ -81,9 +75,6 @@ export default class App {
       this.settingsRepo.set(this.settings).catch(this.handleError);
 
       this.webContents.send('setSettings', this.settings);
-    });
-    ipcMain.on('addMessage', (_: any, value: { id: string; message: string }) => {
-      this.chat.addMessage(value);
     });
     ipcMain.on('setEnableP2PStreamRelay', (_: any, value: boolean) => {
       this.settings.enableP2PStreamRelay = value;

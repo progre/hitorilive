@@ -1,10 +1,15 @@
 import { Observable } from 'rxjs';
-import { Message } from '../../../commons/types';
+import { Message } from './types';
 
 export default class API {
+  constructor(
+    private url: string,
+  ) {
+  }
+
   async postMessage(messageData: { id: string; message: string }) {
     await fetch(
-      '/api/v1/messages',
+      this.url,
       {
         body: JSON.stringify(messageData),
         cache: 'no-cache',
@@ -19,7 +24,7 @@ export default class API {
     // return new Observable<string>(
     //   (subscriber) => {
     //     (async () => {
-    //       const res = await fetch('/api/v1/messages', { cache: 'no-cache' });
+    //       const res = await fetch(this.url, { cache: 'no-cache' });
     //       console.log(res.body);
     //       const reader = res.body!.getReader();
     //       for (; ;) {
@@ -39,7 +44,7 @@ export default class API {
     return new Observable<string>(
       (subscriber) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', '/api/v1/messages');
+        xhr.open('GET', this.url);
         xhr.onerror = (ev) => {
           console.error(new Error('Message websocket throwed an error'));
         };

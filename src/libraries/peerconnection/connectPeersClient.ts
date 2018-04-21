@@ -1,7 +1,6 @@
 import { Observable } from 'rxjs';
 import Peer from 'simple-peer';
-import { TunnelCompletedMessage, TunnelMessage } from './connectPeersTypes';
-export type ConnectPeersServerMessage = TunnelMessage;
+import { TunnelCompletedMessage, TunnelMessage } from './types';
 
 export default function connectPeersClient(
   webSocket: WebSocket,

@@ -1,11 +1,7 @@
-import { ConnectPeersServerMessage } from '../utils/connectPeersClient';
-import { ConnectPeersClientMessage } from '../utils/connectPeersServer';
-
-export interface Message {
-  id: string;
-  index: number;
-  message: string;
-}
+import {
+  ConnectPeersClientMessage,
+  ConnectPeersServerMessage,
+} from '../libraries/peerconnection/types';
 
 // This should define properties flat for compatibility.
 export interface Settings {

@@ -3,8 +3,7 @@ const log = debug('hitorilive:connectPeersServer');
 
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
-import { TunnelCompletedMessage, TunnelMessage } from './connectPeersTypes';
-export type ConnectPeersClientMessage = TunnelMessage | TunnelCompletedMessage;
+import { ConnectPeersClientMessage } from './types';
 
 export class SocketClosedError extends Error {
   name = 'SocketClosedError';

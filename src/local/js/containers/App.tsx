@@ -1,7 +1,6 @@
 import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
-import Chat from '../../../commons/components/Chat';
 import Store from '../Store';
 
 @observer
@@ -106,17 +105,6 @@ export default class App extends React.Component<{ store: Store }> {
             />
           </div>
         </div>
-        <Chat
-          messages={this.props.store.chat.messages}
-          onPost={this.onPost}
-          styles={{
-            container: {
-              backgroundColor: 'black',
-              height: '100%',
-              width: 300,
-            },
-          }}
-        />
       </div>
     );
   }

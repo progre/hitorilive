@@ -1,18 +1,8 @@
 import flvJS from 'flv.js';
 import React from 'react';
-import Chat from '../../../commons/components/Chat';
 import Player from './Player';
 
 export interface Props {
-  chat: {
-    messages: ReadonlyArray<{
-      id: string;
-      index: number;
-      message: string;
-    }>;
-
-    onPost(event: { message: string }): void;
-  };
   player: {
     flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
     onStop(): void;
@@ -20,22 +10,13 @@ export interface Props {
 }
 
 export const initialState = {
-  chat: true,
 };
 
 export default class Root extends React.Component<Props, typeof initialState> {
   constructor(props: any, context?: any) {
     super(props, context);
-    this.onClickChat = this.onClickChat.bind(this);
 
     this.state = initialState;
-  }
-
-  private onClickChat() {
-    this.setState({
-      ...this.state,
-      chat: !this.state.chat,
-    });
   }
 
   render() {
@@ -43,20 +24,8 @@ export default class Root extends React.Component<Props, typeof initialState> {
       <main style={{ display: 'flex', height: '100%' }}>
         <Player
           {...this.props.player}
-          onClickChat={this.onClickChat}
           styles={{ container: { width: '100%' } }}
         />
-        <div style={{
-          flexShrink: 0,
-          overflow: 'hidden',
-          transition: 'width 150ms',
-          width: this.state.chat ? 300 : 0,
-        }}>
-          <Chat
-            styles={{ container: { width: 300 } }}
-            {...this.props.chat}
-          />
-        </div>
       </main>
     );
   }

@@ -5,7 +5,9 @@ import { Observable } from 'rxjs';
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
 import { ServerSignalingMessage } from '../commons/types';
-import connectPeersServer, { SocketClosedError } from '../utils/connectPeersServer';
+import connectPeersServer, {
+  SocketClosedError,
+} from '../libraries/peerconnection/connectPeersServer';
 import Tree, { Peer } from './Tree';
 
 export default class SignalingServer {
