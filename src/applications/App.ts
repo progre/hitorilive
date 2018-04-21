@@ -4,12 +4,9 @@ import { Settings } from '../commons/types';
 import SignalingServer from '../domains/SignalingServer';
 import ServerUnion from '../infrastructures/ServerUnion';
 import SettingsRepo from '../infrastructures/SettingsRepo';
-import ChatDomain from '../libraries/chat/ChatDomain';
-import ChatServer from '../libraries/chat/ChatServer';
 
 export default class App {
-  private readonly chat = new ChatDomain();
-  readonly serverUnion = new ServerUnion(new ChatServer(this.chat), 'HitoriLive');
+  readonly serverUnion = new ServerUnion('HitoriLive');
   private readonly signalingServer = new SignalingServer('/live/.flv');
 
   constructor(
@@ -23,10 +20,6 @@ export default class App {
     this.listenServerEvents(this.serverUnion);
     this.listenSignalingServerEvents(this.signalingServer);
     this.listenGUIEvents(ipcMain);
-
-    this.chat.onMessage.subscribe((message) => {
-      this.webContents.send('addMessage', message);
-    });
   }
 
   isRunning() {
@@ -82,9 +75,6 @@ export default class App {
       this.settingsRepo.set(this.settings).catch(this.handleError);
 
       this.webContents.send('setSettings', this.settings);
-    });
-    ipcMain.on('addMessage', (_: any, value: { id: string; message: string }) => {
-      this.chat.addMessage(value);
     });
     ipcMain.on('setEnableP2PStreamRelay', (_: any, value: boolean) => {
       this.settings.enableP2PStreamRelay = value;

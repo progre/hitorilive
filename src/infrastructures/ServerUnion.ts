@@ -2,7 +2,6 @@ import net from 'net';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 import { Settings } from '../commons/types';
-import ChatServer from '../libraries/chat/ChatServer';
 import HTTPServer from './HTTPServer';
 import MediaServer from './MediaServer';
 import Upnp, { PortAlreadyAssignedError } from './Upnp';
@@ -19,8 +18,8 @@ export default class ServerUnion {
   readonly onJoin: Subject<WebSocket>;
   readonly error = new Subject<{ reason: string }>();
 
-  constructor(chatServer: ChatServer, upnpDescription: string) {
-    this.httpServer = new HTTPServer(chatServer);
+  constructor(upnpDescription: string) {
+    this.httpServer = new HTTPServer();
     this.upnp = new Upnp(upnpDescription);
 
     this.onJoin = this.httpServer.onJoin;

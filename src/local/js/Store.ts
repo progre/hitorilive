@@ -3,15 +3,11 @@ import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
 import { sync as uid } from 'uid-safe';
 import { Settings } from '../../commons/types';
-import { Message } from '../../libraries/chat/types';
 
 export default class Store {
   @observable settings: Settings;
   @observable latestError?: string;
   @observable listeners = 0;
-  @observable chat = {
-    messages: <ReadonlyArray<Message>>[],
-  };
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
     this.settings = settings;
@@ -26,21 +22,6 @@ export default class Store {
 
     ipcRenderer.on('setListeners', action((_: any, value: number) => {
       this.listeners = value;
-    }));
-
-    ipcRenderer.on('addMessage', action((_: any, message: Message) => {
-      const currentMessages = this.chat.messages;
-      if (currentMessages.some(x => x.id === message.id)) {
-        return;
-      }
-      const newMessages = [
-        ...currentMessages,
-        message,
-      ].slice(-1000); // limit 1000
-      this.chat = {
-        ...this.chat,
-        messages: newMessages,
-      };
     }));
   }
 
@@ -66,9 +47,5 @@ export default class Store {
 
   @action clearError() {
     this.latestError = undefined;
-  }
-
-  postMessage(message: string) {
-    this.ipcRenderer.send('addMessage', { message, id: uid(16) });
   }
 }
