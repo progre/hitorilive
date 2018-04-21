@@ -1,14 +1,15 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcMain, WebContents } from 'electron';
 import { Settings } from '../commons/types';
-import Chat from '../domains/Chat';
 import SignalingServer from '../domains/SignalingServer';
 import ServerUnion from '../infrastructures/ServerUnion';
 import SettingsRepo from '../infrastructures/SettingsRepo';
+import ChatDomain from '../libraries/chat/ChatDomain';
+import ChatServer from '../libraries/chat/ChatServer';
 
 export default class App {
-  private readonly chat = new Chat();
-  readonly serverUnion = new ServerUnion(this.chat, 'HitoriLive');
+  private readonly chat = new ChatDomain();
+  readonly serverUnion = new ServerUnion(new ChatServer(this.chat), 'HitoriLive');
   private readonly signalingServer = new SignalingServer('/live/.flv');
 
   constructor(

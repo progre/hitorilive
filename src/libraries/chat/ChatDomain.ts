@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
-import { Message } from '../commons/types';
+import { Message } from './types';
 
-export default class Chat {
+export default class ChatServer {
   messages: ReadonlyArray<Message> = [];
 
   onMessage = new Subject<Message>();

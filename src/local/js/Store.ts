@@ -2,7 +2,8 @@
 import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
 import { sync as uid } from 'uid-safe';
-import { Message, Settings } from '../../commons/types';
+import { Settings } from '../../commons/types';
+import { Message } from '../../libraries/chat/types';
 
 export default class Store {
   @observable settings: Settings;

@@ -1,6 +1,6 @@
 import flvJS from 'flv.js';
 import React from 'react';
-import Chat from '../../../commons/components/Chat';
+import Chat from '../../../libraries/chat/Chat';
 import Player from './Player';
 
 export interface Props {

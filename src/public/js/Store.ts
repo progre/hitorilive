@@ -5,8 +5,8 @@ const log = debug('hitorilive:Store');
 import flvJS from 'flv.js';
 import { action, observable, runInAction } from 'mobx';
 import { sync as uid } from 'uid-safe';
-import { Message } from '../../commons/types';
-import API from './infrastructures/API';
+import ChatAPI from '../../libraries/chat/ChatAPI';
+import { Message } from '../../libraries/chat/types';
 import createSignalingClient from './infrastructures/createSignalingClient';
 import SignalingClient from './infrastructures/SignalingClient';
 
@@ -16,7 +16,7 @@ export default class Store {
   };
   @observable flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
 
-  private api = new API();
+  private api = new ChatAPI('/api/v1/messages');
   private signalingClient!: SignalingClient;
 
   constructor() {

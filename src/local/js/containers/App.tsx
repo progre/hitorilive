@@ -1,7 +1,7 @@
 import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
-import Chat from '../../../commons/components/Chat';
+import Chat from '../../../libraries/chat/Chat';
 import Store from '../Store';
 
 @observer
