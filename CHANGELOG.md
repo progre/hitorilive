@@ -1,3 +1,24 @@
+<a name="0.5.0"></a>
+# [0.5.0](https://github.com/progre/hitorilive/compare/0.4.1...0.5.0) (2018-04-21)
+
+### Important
+
+* relicense from MIT to AGPL-3.0 ([8be23cc](https://github.com/progre/hitorilive/commit/8be23cc))
+
+
+
+### Bug Fixes
+
+* too many bugfixes
+
+
+
+### Features
+
+* P2P stream relay ([913b74b](https://github.com/progre/hitorilive/commit/913b74b), [14ac8d8](https://github.com/progre/hitorilive/commit/14ac8d8), [b383606](https://github.com/progre/hitorilive/commit/b383606), [f753522](https://github.com/progre/hitorilive/commit/f753522), [d393c85](https://github.com/progre/hitorilive/commit/d393c85), [53ab89a](https://github.com/progre/hitorilive/commit/53ab89a))
+
+
+
 <a name="0.4.1"></a>
 ## [0.4.1](https://github.com/progre/hitorilive/compare/0.4.0...0.4.1) (2018-04-11)
 
