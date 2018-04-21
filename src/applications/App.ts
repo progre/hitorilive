@@ -20,6 +20,7 @@ export default class App {
     this.handleError = this.handleError.bind(this);
 
     this.listenServerEvents(this.serverUnion);
+    this.listenSignalingServerEvents(this.signalingServer);
     this.listenGUIEvents(ipcMain);
 
     this.chat.onMessage.subscribe((message) => {
@@ -43,12 +44,6 @@ export default class App {
       }
       this.webContents.send('error', reason);
     });
-    serverUnion.onUpdateListeners.subscribe(() => {
-      if (this.webContents.isDestroyed()) {
-        return;
-      }
-      this.webContents.send('setListeners', serverUnion.getListeners());
-    });
     serverUnion.onJoin.subscribe(async (socket) => {
       try {
         await this.signalingServer.join(socket);
@@ -56,6 +51,15 @@ export default class App {
         socket.close();
         console.error(e.stack || e);
       }
+    });
+  }
+
+  private listenSignalingServerEvents(signalingServer: SignalingServer) {
+    signalingServer.onListenerUpdate.subscribe(({ count }) => {
+      if (this.webContents.isDestroyed()) {
+        return;
+      }
+      this.webContents.send('setListeners', count);
     });
   }
 

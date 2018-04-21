@@ -1,6 +1,6 @@
 import debug from 'debug';
 const log = debug('hitorilive:Tree');
-
+import { Subject } from 'rxjs';
 import WebSocket from 'ws';
 
 // Since most methods are recursive,
@@ -29,6 +29,8 @@ export default class Tree {
     children: [],
   };
 
+  readonly onChildrenCountUpdate = new Subject<{ count: number }>();
+
   getRoot() {
     return this.tree;
   }
@@ -48,16 +50,16 @@ export default class Tree {
       remove(this.tree, client);
       throw new PeerNotFoundError();
     }
-    if (log.enabled) {
-      log(`client connected. count: ${this.count()}`);
-    }
+    const cnt = this.count();
+    log(`client connected. count: ${cnt}`);
+    this.onChildrenCountUpdate.next({ count: cnt });
   }
 
   remove(client: { id: string }) {
     remove(this.tree, client);
-    if (log.enabled) {
-      log(`client removed. count: ${this.count()}`);
-    }
+    const cnt = this.count();
+    log(`client removed. count: ${cnt}`);
+    this.onChildrenCountUpdate.next({ count: cnt });
   }
 
   count() {

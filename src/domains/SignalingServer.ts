@@ -1,6 +1,7 @@
 import debug from 'debug';
 const log = debug('hitorilive:SignalingServer');
 import http from 'http';
+import { Observable } from 'rxjs';
 import { sync as uid } from 'uid-safe';
 import WebSocket from 'ws';
 import { ServerSignalingMessage } from '../commons/types';
@@ -10,6 +11,8 @@ import Tree, { Peer } from './Tree';
 export default class SignalingServer {
   private readonly tree = new Tree();
   private tunnelCount = 0;
+
+  readonly onListenerUpdate: Observable<{ count: number }> = this.tree.onChildrenCountUpdate;
 
   constructor(
     private readonly mediaPath: string,

@@ -14,6 +14,7 @@ export default class ServerUnion {
   private updateServerTimer?: any;
   private serverStarting = false;
 
+  /** This event doesn't countain p2p connections. */
   readonly onUpdateListeners: Subject<{}> = this.mediaServer.onUpdateListeners;
   readonly onJoin: Subject<WebSocket>;
   readonly error = new Subject<{ reason: string }>();
@@ -25,6 +26,7 @@ export default class ServerUnion {
     this.onJoin = this.httpServer.onJoin;
   }
 
+  /** This property doesn't countain p2p connections. */
   getListeners() {
     return this.mediaServer.listeners;
   }
