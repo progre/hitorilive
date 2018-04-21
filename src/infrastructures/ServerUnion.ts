@@ -1,5 +1,6 @@
 import net from 'net';
 import { Subject } from 'rxjs';
+import WebSocket from 'ws';
 import { Settings } from '../commons/types';
 import Chat from '../domains/Chat';
 import HTTPServer from './HTTPServer';
@@ -13,14 +14,19 @@ export default class ServerUnion {
   private updateServerTimer?: any;
   private serverStarting = false;
 
+  /** This event doesn't countain p2p connections. */
   readonly onUpdateListeners: Subject<{}> = this.mediaServer.onUpdateListeners;
+  readonly onJoin: Subject<WebSocket>;
   readonly error = new Subject<{ reason: string }>();
 
   constructor(chat: Chat, upnpDescription: string) {
     this.httpServer = new HTTPServer(chat);
     this.upnp = new Upnp(upnpDescription);
+
+    this.onJoin = this.httpServer.onJoin;
   }
 
+  /** This property doesn't countain p2p connections. */
   getListeners() {
     return this.mediaServer.listeners;
   }
@@ -77,9 +83,6 @@ export default class ServerUnion {
   }
 
   async closeServer(useUpnp: boolean) {
-    if (this.mediaServer.isRunning()) {
-      await this.mediaServer.stopServer();
-    }
     if (this.httpServer.isRunning()) {
       const oldHTTPPort = this.httpServer.port;
       await this.httpServer.stopServer();
@@ -91,6 +94,9 @@ export default class ServerUnion {
           this.error.next(e.message);
         }
       }
+    }
+    if (this.mediaServer.isRunning()) {
+      await this.mediaServer.stopServer();
     }
   }
 }

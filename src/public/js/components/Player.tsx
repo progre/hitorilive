@@ -26,7 +26,10 @@ export interface Props {
     container: CSSProperties;
   };
 
+  flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
+
   onClickChat(): void;
+  onStop(): void;
 }
 
 export const initialState = {
@@ -41,10 +44,13 @@ export default class Player extends React.Component<Props, typeof initialState> 
     this.state = initialState;
   }
 
-  componentDidMount() {
+  componentDidUpdate(prevProps: Props, prevState: typeof initialState, snapshot: any) {
     const video = document.getElementById('video') as HTMLVideoElement;
     video.volume = 0.5;
-    start(video).catch((e) => { console.error(e.stack || e); });
+    if (prevProps.flvPlayer !== this.props.flvPlayer && this.props.flvPlayer != null) {
+      play(video, this.props.flvPlayer)
+        .catch((e) => { console.error(e.message, e.stack || e); });
+    }
   }
 
   onLoadedMetadata() {
@@ -53,6 +59,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
 
   onEmptied() {
     this.setState({ ...this.state, playing: false });
+    this.props.onStop();
   }
 
   render() {
@@ -65,6 +72,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
         <video
           style={centerCSS}
           id="video"
+          autoPlay={true}
           onLoadedMetadata={this.onLoadedMetadata}
           onEmptied={this.onEmptied}
         ></video>
@@ -104,18 +112,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
   }
 }
 
-async function start(element: HTMLVideoElement) {
-  for (; ;) {
-    await startPlayer(element, location.host);
-  }
-}
-
-async function startPlayer(element: HTMLVideoElement, host: string) {
-  const flvPlayer = flvJS.createPlayer({
-    isLive: true,
-    type: 'flv',
-    url: `ws://${host}/live/.flv`,
-  });
+async function play(element: HTMLVideoElement, flvPlayer: ReturnType<typeof flvJS.createPlayer>) {
   flvPlayer.attachMediaElement(element);
   flvPlayer.load();
   await Promise.all([

@@ -20,13 +20,19 @@ export default class SettingsRepo {
       }
     })();
     return {
-      rtmpPort: json.rtmpPort != null ? json.rtmpPort : 1935,
-      httpPort: json.httpPort != null ? json.httpPort : 17144,
-      useUpnp: json.useUpnp != null ? json.useUpnp : true,
+      rtmpPort: valueOrDefault(json.rtmpPort, 1935),
+      httpPort: valueOrDefault(json.httpPort, 17144),
+      useUpnp: valueOrDefault(json.useUpnp, true),
+      enableP2PStreamRelay: valueOrDefault(json.enableP2PStreamRelay, false),
+      directlyConnectionLimit: valueOrDefault(json.directlyConnectionLimit, 10),
     };
   }
 
   async set(data: Settings) {
     await writeFile(this.path, JSON.stringify(data), { encoding: 'utf8' });
   }
+}
+
+function valueOrDefault<T>(value: T, def: T) {
+  return value != null ? value : def;
 }

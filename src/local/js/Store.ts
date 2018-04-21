@@ -5,9 +5,7 @@ import { sync as uid } from 'uid-safe';
 import { Message, Settings } from '../../commons/types';
 
 export default class Store {
-  @observable rtmpPort?: number;
-  @observable httpPort?: number;
-  @observable useUpnp?: boolean;
+  @observable settings: Settings;
   @observable latestError?: string;
   @observable listeners = 0;
   @observable chat = {
@@ -15,14 +13,10 @@ export default class Store {
   };
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
-    this.rtmpPort = settings.rtmpPort;
-    this.httpPort = settings.httpPort;
-    this.useUpnp = settings.useUpnp;
+    this.settings = settings;
 
     ipcRenderer.on('setSettings', action((_: any, value: Settings) => {
-      this.rtmpPort = value.rtmpPort;
-      this.httpPort = value.httpPort;
-      this.useUpnp = value.useUpnp;
+      this.settings = value;
     }));
 
     ipcRenderer.on('error', action((_: any, value: string) => {
@@ -47,6 +41,14 @@ export default class Store {
         messages: newMessages,
       };
     }));
+  }
+
+  setEnableP2PStreamRelay(value: boolean) {
+    this.ipcRenderer.send('setEnableP2PStreamRelay', value);
+  }
+
+  setDirectlyConnectionLimit(value: number) {
+    this.ipcRenderer.send('setDirectlyConnectionLimit', value);
   }
 
   setRTMPPort(value: number) {

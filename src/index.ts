@@ -5,6 +5,8 @@ import electron from 'electron';
 import App from './applications/App';
 import SettingsRepo from './infrastructures/SettingsRepo';
 
+process.on('unhandledRejection', console.dir);
+
 async function main() {
   await new Promise((resolve, reject) => electron.app.once('ready', resolve));
 
@@ -31,6 +33,8 @@ async function main() {
     e.preventDefault();
     try {
       await app.close();
+    } catch (err) {
+      console.error(err.stack || err);
     } finally {
       electron.app.quit();
     }

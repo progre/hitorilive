@@ -2,12 +2,14 @@
 import { IpcMain, WebContents } from 'electron';
 import { Settings } from '../commons/types';
 import Chat from '../domains/Chat';
+import SignalingServer from '../domains/SignalingServer';
 import ServerUnion from '../infrastructures/ServerUnion';
 import SettingsRepo from '../infrastructures/SettingsRepo';
 
 export default class App {
-  private chat = new Chat();
-  serverUnion = new ServerUnion(this.chat, 'HitoriLive');
+  private readonly chat = new Chat();
+  readonly serverUnion = new ServerUnion(this.chat, 'HitoriLive');
+  private readonly signalingServer = new SignalingServer('/live/.flv');
 
   constructor(
     ipcMain: IpcMain,
@@ -17,10 +19,51 @@ export default class App {
   ) {
     this.handleError = this.handleError.bind(this);
 
-    this.serverUnion.error.subscribe(({ reason }) => {
+    this.listenServerEvents(this.serverUnion);
+    this.listenSignalingServerEvents(this.signalingServer);
+    this.listenGUIEvents(ipcMain);
+
+    this.chat.onMessage.subscribe((message) => {
+      this.webContents.send('addMessage', message);
+    });
+  }
+
+  isRunning() {
+    return this.serverUnion.isRunning();
+  }
+
+  async close() {
+    await this.serverUnion.closeServer(this.settings.useUpnp);
+  }
+
+  private listenServerEvents(serverUnion: ServerUnion) {
+    serverUnion.error.subscribe(({ reason }) => {
+      if (this.webContents.isDestroyed()) {
+        console.error(new Error(reason));
+        return;
+      }
       this.webContents.send('error', reason);
     });
+    serverUnion.onJoin.subscribe(async (socket) => {
+      try {
+        await this.signalingServer.join(socket);
+      } catch (e) {
+        socket.close();
+        console.error(e.stack || e);
+      }
+    });
+  }
 
+  private listenSignalingServerEvents(signalingServer: SignalingServer) {
+    signalingServer.onListenerUpdate.subscribe(({ count }) => {
+      if (this.webContents.isDestroyed()) {
+        return;
+      }
+      this.webContents.send('setListeners', count);
+    });
+  }
+
+  private listenGUIEvents(ipcMain: IpcMain) {
     ipcMain.on('setRTMPPort', (_: any, value: number) => {
       this.settings.rtmpPort = value;
       this.settingsRepo.set(this.settings).catch(this.handleError);
@@ -42,26 +85,33 @@ export default class App {
     ipcMain.on('addMessage', (_: any, value: { id: string; message: string }) => {
       this.chat.addMessage(value);
     });
-
-    this.chat.onMessage.subscribe((message) => {
-      this.webContents.send('addMessage', message);
+    ipcMain.on('setEnableP2PStreamRelay', (_: any, value: boolean) => {
+      this.settings.enableP2PStreamRelay = value;
+      this.settingsRepo.set(this.settings).catch(this.handleError);
+      updateServerDirectlyConnectionLimit(this.signalingServer, this.settings);
+      this.webContents.send('setSettings', this.settings);
     });
-
-    this.serverUnion.onUpdateListeners.subscribe(() => {
-      this.webContents.send('setListeners', this.serverUnion.getListeners());
+    ipcMain.on('setDirectlyConnectionLimit', (_: any, value: number) => {
+      this.settings.directlyConnectionLimit = value;
+      this.settingsRepo.set(this.settings).catch(this.handleError);
+      updateServerDirectlyConnectionLimit(this.signalingServer, this.settings);
+      this.webContents.send('setSettings', this.settings);
     });
-  }
-
-  isRunning() {
-    return this.serverUnion.isRunning();
-  }
-
-  async close() {
-    await this.serverUnion.closeServer(this.settings.useUpnp);
   }
 
   private handleError(e: Error) {
     console.error(e.stack || e);
     this.webContents.send('error', e.message || e);
+  }
+}
+
+function updateServerDirectlyConnectionLimit(
+  signalingServer: SignalingServer,
+  settings: Settings,
+) {
+  if (settings.enableP2PStreamRelay) {
+    signalingServer.setDirectlyConnectionLimit(settings.directlyConnectionLimit);
+  } else {
+    signalingServer.setDirectlyConnectionLimit(Infinity);
   }
 }

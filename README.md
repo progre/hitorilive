@@ -30,3 +30,11 @@ $ npm run package
   - Convert with:
     - https://convertio.co/ja/png-converter/
     - https://iconverticons.com/online/
+
+## Tips
+
+- If you want to show logs on client, then you execute a command on your browser's console;
+
+```
+localStorage.debug = 'hitorilive:*'
+```

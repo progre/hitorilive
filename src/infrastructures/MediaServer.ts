@@ -9,7 +9,7 @@ export default class MediaServer {
   private nms?: any;
   listeners = 0;
 
-  onUpdateListeners = new Subject();
+  readonly onUpdateListeners = new Subject();
 
   constructor() {
     setInterval(
@@ -57,7 +57,6 @@ export default class MediaServer {
     this.nms = new NodeMediaServer(config);
     this.nms.run();
     const httpServer = (<http.Server>this.nms.nhs.httpServer);
-    monkeyPatchForReload(this.nms);
 
     await new Promise((resolve, reject) => {
       const timer = setInterval(
@@ -82,25 +81,5 @@ export default class MediaServer {
     await new Promise((resolve, _) => {
       setTimeout(resolve, 1000);
     });
-    monkeyPatchClearResources();
   }
-}
-
-function monkeyPatchClearResources() {
-  (<Set<any>>context.idlePlayers).clear();
-  (<Map<any, any>>context.publishers).clear();
-}
-
-function monkeyPatchForReload(nms: any) {
-  const onConnect = nms.nhs.onConnect.bind(nms.nhs);
-  nms.nhs.onConnect = (req: any, res: any) => {
-    try {
-      onConnect(req, res);
-    } catch (e) {
-      if (e.message === 'not opened') {
-        return;
-      }
-      throw e;
-    }
-  };
 }

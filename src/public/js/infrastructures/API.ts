@@ -41,7 +41,7 @@ export default class API {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', '/api/v1/messages');
         xhr.onerror = (ev) => {
-          console.error(ev);
+          console.error(new Error('Message websocket throwed an error'));
         };
         xhr.onloadend = () => {
           setTimeout(() => { subscriber.complete(); }, 3000);
