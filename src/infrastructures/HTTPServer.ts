@@ -3,7 +3,6 @@ import httpProxy from 'http-proxy';
 import net from 'net';
 import { Subject } from 'rxjs';
 import WebSocket from 'ws';
-import ChatServer from '../libraries/chat/ChatServer';
 
 export default class HTTPServer {
   private server?: http.Server;
@@ -12,11 +11,6 @@ export default class HTTPServer {
   port = 0;
 
   readonly onJoin = new Subject<WebSocket>();
-
-  constructor(
-    private chatServer: ChatServer,
-  ) {
-  }
 
   isRunning() {
     return this.server != null;
@@ -81,10 +75,6 @@ export default class HTTPServer {
     req: http.IncomingMessage,
     res: http.ServerResponse,
   ) {
-    if (req.url === '/api/v1/messages') {
-      this.chatServer.handleAPIRequest(req, res);
-      return;
-    }
     res.writeHead(400);
     res.end(`400 ${http.STATUS_CODES[String(400)]}`);
   }

@@ -28,7 +28,6 @@ export interface Props {
 
   flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
 
-  onClickChat(): void;
   onStop(): void;
 }
 
@@ -93,19 +92,6 @@ export default class Player extends React.Component<Props, typeof initialState> 
           position: 'absolute',
           width: '100%',
         }}>
-          <span
-            title="Open / Close chat view"
-            onClick={this.props.onClickChat}
-            style={{
-              bottom: 0,
-              cursor: 'pointer',
-              margin: 20,
-              position: 'absolute',
-              right: 0,
-            }}
-          >
-            📝
-          </span>
         </ControllerWrapper>
       </div >
     );

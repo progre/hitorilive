@@ -1,7 +1,6 @@
 import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
-import Chat from '../../../libraries/chat/Chat';
 import Store from '../Store';
 
 @observer
@@ -14,7 +13,6 @@ export default class App extends React.Component<{ store: Store }> {
     this.onChangeHTTP = this.onChangeHTTP.bind(this);
     this.onCloseError = this.onCloseError.bind(this);
     this.onCheckUpnp = this.onCheckUpnp.bind(this);
-    this.onPost = this.onPost.bind(this);
   }
 
   private onEnableP2PStreamRelayChange(e: ChangeEvent<HTMLInputElement>) {
@@ -39,10 +37,6 @@ export default class App extends React.Component<{ store: Store }> {
 
   private onCheckUpnp(e: ChangeEvent<HTMLInputElement>) {
     this.props.store.setUseUpnpPortMapping(e.target.checked);
-  }
-
-  private onPost(ev: { message: string }) {
-    this.props.store.postMessage(ev.message);
   }
 
   render() {
@@ -106,17 +100,6 @@ export default class App extends React.Component<{ store: Store }> {
             />
           </div>
         </div>
-        <Chat
-          messages={this.props.store.chat.messages}
-          onPost={this.onPost}
-          styles={{
-            container: {
-              backgroundColor: 'black',
-              height: '100%',
-              width: 300,
-            },
-          }}
-        />
       </div>
     );
   }
