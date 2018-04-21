@@ -55,8 +55,8 @@ export default class App extends React.Component<{ store: Store }> {
       }}>
         <div>
           <P2PSettings
-            enableP2PStreamRelay={this.props.store.enableP2PStreamRelay}
-            directlyConnectionLimit={this.props.store.directlyConnectionLimit}
+            enableP2PStreamRelay={this.props.store.settings.enableP2PStreamRelay}
+            directlyConnectionLimit={this.props.store.settings.directlyConnectionLimit}
             onEnableP2PStreamRelayChange={this.onEnableP2PStreamRelayChange}
             onDirectlyConnectionLimitChange={this.onDirectlyConnectionLimitChange}
           />
@@ -75,14 +75,14 @@ export default class App extends React.Component<{ store: Store }> {
               label="RTMP Port"
               type="number"
               inputProps={{ min: 0, max: 65535 }}
-              value={this.props.store.rtmpPort}
+              value={this.props.store.settings.rtmpPort}
               onChange={this.onChangeRTMP}
             />
             <TextField
               label="HTTP Port"
               type="number"
               inputProps={{ min: 0, max: 65535 }}
-              value={this.props.store.httpPort}
+              value={this.props.store.settings.httpPort}
               onChange={this.onChangeHTTP}
             />
           </div>
@@ -91,7 +91,7 @@ export default class App extends React.Component<{ store: Store }> {
               control={
                 <Checkbox
                   color="primary"
-                  checked={this.props.store.useUpnp}
+                  checked={this.props.store.settings.useUpnp}
                   onChange={this.onCheckUpnp}
                 />
               }
