@@ -3,7 +3,7 @@ const log = debug('hitorilive:createSignalingClient');
 
 import { Observable } from 'rxjs';
 import { ServerSignalingMessage } from '../../../commons/types';
-import connectPeersClient from '../../../utils/connectPeersClient';
+import connectPeersClient from '../../../libraries/peerconnection/connectPeersClient';
 import SignalingClient from './SignalingClient';
 import { toObservableFromPeer, toObservableFromWebSocket } from './toObservable';
 

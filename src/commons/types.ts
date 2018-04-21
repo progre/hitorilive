@@ -1,5 +1,7 @@
-import { ConnectPeersServerMessage } from '../utils/connectPeersClient';
-import { ConnectPeersClientMessage } from '../utils/connectPeersServer';
+import {
+  ConnectPeersClientMessage,
+  ConnectPeersServerMessage,
+} from '../libraries/peerconnection/types';
 
 export interface Message {
   id: string;

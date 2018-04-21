@@ -1,3 +1,6 @@
+export type ConnectPeersClientMessage = TunnelMessage | TunnelCompletedMessage;
+export type ConnectPeersServerMessage = TunnelMessage;
+
 export interface TunnelMessage {
   readonly type: 'tunnel';
   readonly payload: {

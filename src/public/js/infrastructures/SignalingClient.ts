@@ -5,7 +5,7 @@ import flvJS from 'flv.js';
 import { ConnectableObservable, Observable, Subject, Subscription } from 'rxjs';
 import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
-import connectPeersClient from '../../../utils/connectPeersClient';
+import connectPeersClient from '../../../libraries/peerconnection/connectPeersClient';
 import ObservableLoader from './ObservableLoader';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
