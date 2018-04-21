@@ -13,7 +13,6 @@ export default class App extends React.Component<{ store: Store }> {
     this.onChangeHTTP = this.onChangeHTTP.bind(this);
     this.onCloseError = this.onCloseError.bind(this);
     this.onCheckUpnp = this.onCheckUpnp.bind(this);
-    this.onPost = this.onPost.bind(this);
   }
 
   private onEnableP2PStreamRelayChange(e: ChangeEvent<HTMLInputElement>) {
@@ -38,10 +37,6 @@ export default class App extends React.Component<{ store: Store }> {
 
   private onCheckUpnp(e: ChangeEvent<HTMLInputElement>) {
     this.props.store.setUseUpnpPortMapping(e.target.checked);
-  }
-
-  private onPost(ev: { message: string }) {
-    this.props.store.postMessage(ev.message);
   }
 
   render() {

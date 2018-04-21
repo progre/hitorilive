@@ -1,7 +1,6 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcRenderer } from 'electron';
 import { action, observable } from 'mobx';
-import { sync as uid } from 'uid-safe';
 import { Settings } from '../../commons/types';
 
 export default class Store {
