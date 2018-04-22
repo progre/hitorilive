@@ -1,3 +1,15 @@
+<a name="0.6.0"></a>
+# [0.6.0](https://github.com/progre/hitorilive/compare/0.5.0...0.6.0) (2018-04-22)
+
+
+### Features
+
+* i18n ([8a913be](https://github.com/progre/hitorilive/commit/8a913be))
+* R.I.P chat ([7b86c78](https://github.com/progre/hitorilive/commit/7b86c78))
+* UI improvement ([08b17ce](https://github.com/progre/hitorilive/commit/08b17ce))
+
+
+
 <a name="0.5.0"></a>
 # [0.5.0](https://github.com/progre/hitorilive/compare/0.4.1...0.5.0) (2018-04-21)
 
