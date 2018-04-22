@@ -3,6 +3,10 @@
   "enable-p2p-stream-relay": "(Expermental) Enable P2P stream relay",
   "listeners": "Listeners",
   "http-port": "HTTP Port",
+  "public-url": "You can watch it by accessing this URL in the browser.",
+  "replace-localhost-with-your-ip": "In some cases replace localhost with your IP.",
   "rtmp-port": "RTMP Port",
-  "use-upnp-port-mapping": "Use UPnP port mapping"
+  "set-to-obs": "Set to Custom Server's URL at your encoder, e.g. OBS",
+  "use-upnp-port-mapping": "Use UPnP port mapping",
+  "your-ip": "Your IP"
 }

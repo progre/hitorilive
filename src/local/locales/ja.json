@@ -1,8 +1,12 @@
 {
-  "directs": "直下",
+  "directs": "サーバー直下の接続数制限",
   "enable-p2p-stream-relay": "(実験機能) P2P配信リレーを有効にする",
   "listeners": "リスナー数",
-  "http-port": "HTTPポート",
-  "rtmp-port": "RTMPポート",
-  "use-upnp-port-mapping": "UPnPによるポート自動開放を行う"
+  "http-port": "HTTP待ち受けポート",
+  "public-url": "ブラウザーでこのURLにアクセスすると視聴できます",
+  "replace-localhost-with-your-ip": "localhostの代わりにIPアドレスが必要な場合があります",
+  "rtmp-port": "RTMP待ち受けポート",
+  "set-to-obs": "OBSなどのエンコーダーのURL欄に貼り付けてください",
+  "use-upnp-port-mapping": "UPnPによるポート自動開放を行う",
+  "your-ip": "あなたのIP"
 }

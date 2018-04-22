@@ -20,8 +20,8 @@ async function main() {
         monospace: 'MS Gothic',
       },
     },
-    width: 640,
-    height: 360,
+    width: 390,
+    height: 675,
     resizable: true,
     show: false,
   });

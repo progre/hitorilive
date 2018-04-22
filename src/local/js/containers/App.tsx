@@ -1,8 +1,17 @@
-import { t } from 'i18next';
-import { Checkbox, FormControlLabel, Snackbar, TextField } from 'material-ui';
+import {
+  FormControl,
+  FormGroup,
+  FormLabel,
+  Snackbar,
+} from 'material-ui';
 import { observer } from 'mobx-react';
 import React, { ChangeEvent } from 'react';
+import HTTPSettings from '../components/HTTPSettings';
+import P2PSettings from '../components/P2PSettings';
+import RTMPSettings from '../components/RTMPSettings';
+import Status from '../components/Status';
 import Store from '../Store';
+import { verticalFlexStyle } from '../styles';
 
 @observer
 export default class App extends React.Component<{ store: Store }> {
@@ -43,112 +52,50 @@ export default class App extends React.Component<{ store: Store }> {
   render() {
     return (
       <div style={{
+        ...verticalFlexStyle,
         boxSizing: 'border-box',
-        display: 'flex',
+        cursor: 'default',
         height: '100%',
         padding: 8,
+        userSelect: 'none',
       }}>
-        <div>
-          <P2PSettings
-            enableP2PStreamRelay={this.props.store.settings.enableP2PStreamRelay}
-            directlyConnectionLimit={this.props.store.settings.directlyConnectionLimit}
-            onEnableP2PStreamRelayChange={this.onEnableP2PStreamRelayChange}
-            onDirectlyConnectionLimitChange={this.onDirectlyConnectionLimitChange}
-          />
-          <div>
-            <Snackbar
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
+        <Snackbar
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'center',
+          }}
+          open={this.props.store.latestError != null}
+          onClose={this.onCloseError}
+          autoHideDuration={6000}
+          message={<span>{this.props.store.latestError}</span>}
+        />
+        <Status store={this.props.store} styles={{ container: {} }} />
+        <FormControl component="fieldset" style={{ marginTop: 30 }}>
+          <FormLabel component="legend">Settings</FormLabel>
+          <FormGroup>
+            <RTMPSettings
+              store={this.props.store}
+              onRTMPChange={this.onChangeRTMP}
+            />
+            <HTTPSettings
+              store={this.props.store}
+              onHTTPChange={this.onChangeHTTP}
+              onUpnpCheck={this.onCheckUpnp}
+            />
+            <P2PSettings
+              styles={{
+                container: {
+                  marginTop: 15,
+                },
               }}
-              open={this.props.store.latestError != null}
-              onClose={this.onCloseError}
-              autoHideDuration={6000}
-              message={<span>{this.props.store.latestError}</span>}
+              enableP2PStreamRelay={this.props.store.settings.enableP2PStreamRelay}
+              directlyConnectionLimit={this.props.store.settings.directlyConnectionLimit}
+              onEnableP2PStreamRelayChange={this.onEnableP2PStreamRelayChange}
+              onDirectlyConnectionLimitChange={this.onDirectlyConnectionLimitChange}
             />
-            <TextField
-              label={t('rtmp-port')}
-              type="number"
-              inputProps={{ min: 0, max: 65535 }}
-              value={this.props.store.settings.rtmpPort}
-              onChange={this.onChangeRTMP}
-            />
-            <TextField
-              label={t('http-port')}
-              type="number"
-              inputProps={{ min: 0, max: 65535 }}
-              value={this.props.store.settings.httpPort}
-              onChange={this.onChangeHTTP}
-            />
-          </div>
-          <div>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  color="primary"
-                  checked={this.props.store.settings.useUpnp}
-                  onChange={this.onCheckUpnp}
-                />
-              }
-              label={t('use-upnp-port-mapping')}
-            />
-          </div>
-          <div>
-            <TextField
-              label={t('listeners')}
-              value={this.props.store.listeners}
-              inputProps={{ readOnly: true }}
-            />
-          </div>
-        </div>
-      </div>
+          </FormGroup>
+        </FormControl>
+      </div >
     );
   }
-}
-
-function P2PSettings(props: {
-  enableP2PStreamRelay: boolean;
-  directlyConnectionLimit: number;
-
-  onEnableP2PStreamRelayChange(e: ChangeEvent<HTMLInputElement>): void;
-  onDirectlyConnectionLimitChange(e: ChangeEvent<HTMLInputElement>): void;
-}) {
-  return (
-    <div>
-      <FormControlLabel
-        control={
-          <Checkbox
-            color="primary"
-            checked={props.enableP2PStreamRelay}
-            onChange={props.onEnableP2PStreamRelayChange}
-          />
-        }
-        label={t('enable-p2p-stream-relay')}
-      />
-      <TextField
-        label={t('directs')}
-        disabled={!props.enableP2PStreamRelay}
-        value={
-          !props.enableP2PStreamRelay
-            ? '∞'
-            : props.directlyConnectionLimit
-        }
-        onChange={props.onDirectlyConnectionLimitChange}
-        type={
-          !props.enableP2PStreamRelay
-            ? 'string'
-            : 'number'
-        }
-        inputProps={{
-          min: 1,
-        }}
-        InputLabelProps={{
-          shrink: true,
-        }}
-        style={{
-          marginLeft: '2em',
-        }}
-      />
-    </div>
-  );
 }
