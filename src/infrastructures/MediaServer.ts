@@ -1,4 +1,5 @@
 import http from 'http';
+import net from 'net';
 import { Subject } from 'rxjs';
 // tslint:disable-next-line:variable-name
 const NodeMediaServer = require('node-media-server');
@@ -56,30 +57,65 @@ export default class MediaServer {
     };
     this.nms = new NodeMediaServer(config);
     this.nms.run();
-    const httpServer = (<http.Server>this.nms.nhs.httpServer);
-
-    await new Promise((resolve, reject) => {
-      const timer = setInterval(
-        () => {
-          if (!httpServer.listening) {
-            return;
-          }
-          clearInterval(timer);
-          resolve();
-        },
-        100,
-      );
-    });
+    const httpServer = getHttpServer(this.nms);
+    await checkListening(httpServer);
     return { httpPort: httpServer.address().port };
   }
 
   async stopServer() {
+    const httpServer = getHttpServer(this.nms);
+    const tcpServer: net.Server = this.nms.nrs.tcpServer;
     this.nms.stop();
     this.nms = null;
     this.listeners = 0;
     this.onUpdateListeners.next();
-    await new Promise((resolve, _) => {
-      setTimeout(resolve, 1000);
-    });
+    await checkClose(httpServer);
+    await checkClose(tcpServer);
+
+    monkeyPatchClearResources();
   }
+}
+
+async function checkListening(server: net.Server) {
+  return new Promise((resolve, reject) => {
+    const timer = setInterval(
+      () => {
+        if (!server.listening) {
+          return;
+        }
+        clearInterval(timer);
+        resolve();
+      },
+      100,
+    );
+  });
+}
+
+async function checkClose(server: net.Server) {
+  return new Promise((resolve, reject) => {
+    const timer = setInterval(
+      () => {
+        if (server.listening) {
+          return;
+        }
+        server.getConnections((err, count) => {
+          if (count > 0) {
+            return;
+          }
+          clearInterval(timer);
+          resolve();
+        });
+      },
+      100,
+    );
+  });
+}
+
+function getHttpServer(nms: any): http.Server {
+  return nms.nhs.httpServer;
+}
+
+function monkeyPatchClearResources() {
+  (<Set<any>>context.idlePlayers).clear();
+  (<Map<any, any>>context.publishers).clear();
 }
