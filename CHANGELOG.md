@@ -1,3 +1,18 @@
+<a name="0.7.0"></a>
+# [0.7.0](https://github.com/progre/hitorilive/compare/0.6.0...0.7.0) (2018-04-24)
+
+
+### Bug Fixes
+
+* fix server error on port changed ([3ae02c0](https://github.com/progre/hitorilive/commit/3ae02c0), [cf511df](https://github.com/progre/hitorilive/commit/cf511df)), closes [#10](https://github.com/progre/hitorilive/issues/10)
+
+
+### Features
+
+* add volume control ([94cb566](https://github.com/progre/hitorilive/commit/94cb566)), closes [#7](https://github.com/progre/hitorilive/issues/7)
+
+
+
 <a name="0.6.0"></a>
 # [0.6.0](https://github.com/progre/hitorilive/compare/0.5.0...0.6.0) (2018-04-22)
 
