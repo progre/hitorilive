@@ -1,4 +1,5 @@
 {
+  "bitrate": "ビットレート",
   "directs": "サーバー直下の接続数制限",
   "enable-p2p-stream-relay": "(実験機能) P2P配信リレーを有効にする",
   "listeners": "リスナー数",

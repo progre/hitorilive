@@ -69,7 +69,7 @@ export default class App extends React.Component<{ store: Store }> {
           autoHideDuration={6000}
           message={<span>{this.props.store.latestError}</span>}
         />
-        <Status store={this.props.store} styles={{ container: {} }} />
+        <Status {...this.props.store} styles={{ container: {} }} />
         <FormControl component="fieldset" style={{ marginTop: 30 }}>
           <FormLabel component="legend">Settings</FormLabel>
           <FormGroup>

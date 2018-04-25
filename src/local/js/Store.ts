@@ -1,12 +1,13 @@
 // tslint:disable-next-line:no-implicit-dependencies
 import { IpcRenderer } from 'electron';
-import { action, observable } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { Settings } from '../../commons/types';
 
 export default class Store {
   @observable settings: Settings;
   @observable latestError?: string;
   @observable listeners = 0;
+  @observable bps = 0;
 
   constructor(settings: Settings, private ipcRenderer: IpcRenderer) {
     this.settings = settings;
@@ -22,6 +23,21 @@ export default class Store {
     ipcRenderer.on('setListeners', action((_: any, value: number) => {
       this.listeners = value;
     }));
+
+    setInterval(
+      async () => {
+        let bps: number;
+        try {
+          bps = await fetchBPS(this.settings.httpPort);
+        } catch (err) {
+          bps = 0;
+        }
+        runInAction(() => {
+          this.bps = bps;
+        });
+      },
+      1000,
+    );
   }
 
   setEnableP2PStreamRelay(value: boolean) {
@@ -47,4 +63,15 @@ export default class Store {
   @action clearError() {
     this.latestError = undefined;
   }
+}
+
+async function fetchBPS(httpPort: number) {
+  const res = await fetch(`http://127.0.0.1:${httpPort}/api/streams/`);
+  const json = await res.json();
+  const publisher = json.live[''].publisher;
+  const elapsedTimeSeconds = (
+    (Date.now() - new Date(publisher.connectCreated).getTime()) / 1000
+  );
+  const bits = publisher.bytes * 8;
+  return bits / elapsedTimeSeconds;
 }
