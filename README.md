@@ -3,12 +3,10 @@
 
 Live broadcasting without a server for everyone.
 
-* This version is still expermental. You need to do NAT traversal (eg, UPnP) yourself.
-
 ## Usage
 
-1. Execute # HitoriLive first
-2. Set RTMP port (to connect from OBS) and set HTTP port (to connect from browser)
+1. Execute HitoriLive first
+2. Set *RTMP port* (to connect from OBS) and set *HTTP port* (to connect from browser)
 3. Start OBS broadcast to `rtmp://localhost:[set RTMP port]/live`
 4. Open `http://[your ip address]:[set HTTP port]/` in browser of you or your friends
 
