@@ -15,7 +15,7 @@ export default function Status(props: {
   return (
     <FormControl component="fieldset" style={props.styles.container}>
       <FormLabel component="legend">Status</FormLabel>
-      <FormGroup style={{ flexDirection: 'row' }}>
+      <FormGroup style={{ flexDirection: 'row', marginTop: 15 }}>
         <TextField
           label={t('bitrate')}
           value={
@@ -26,7 +26,7 @@ export default function Status(props: {
           inputProps={{
             readOnly: true,
           }}
-          style={{ marginTop: 15 }}
+          style={{ width: '5em' }}
         />
         <TextField
           label={t('listeners')}
@@ -34,7 +34,7 @@ export default function Status(props: {
           inputProps={{
             readOnly: true,
           }}
-          style={{ marginTop: 15, marginLeft: 15 }}
+          style={{ width: '5em', marginLeft: 15 }}
         />
       </FormGroup>
     </FormControl>
