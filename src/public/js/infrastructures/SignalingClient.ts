@@ -1,6 +1,5 @@
 import debug from 'debug';
 const log = debug('hitorilive:SignalingClient');
-
 import flvJS from 'flv.js';
 import { ConnectableObservable, Observable, Subject, Subscription } from 'rxjs';
 import Peer from 'simple-peer';
@@ -51,14 +50,17 @@ export default class SignalingClient {
         throw new Error(`logic error (${header.byteLength})`);
       }
     });
+    const stream = this.replayableHeaders.concat(this.publishedUpstream);
+    const customLoader = class extends ObservableLoader {
+      constructor() { super(stream); }
+    };
     this.flvPlayer = flvJS.createPlayer(
       {
         type: 'flv',
         isLive: true,
       },
       {
-        customLoader: ObservableLoader,
-        customLoaderParameters: this.replayableHeaders.concat(this.publishedUpstream),
+        customLoader,
       },
     );
 
