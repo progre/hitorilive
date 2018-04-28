@@ -57,7 +57,8 @@ export default class SignalingClient {
         isLive: true,
       },
       {
-        loader: new ObservableLoader(this.replayableHeaders.concat(this.publishedUpstream)),
+        customLoader: ObservableLoader,
+        customLoaderParameters: this.replayableHeaders.concat(this.publishedUpstream),
       },
     );
 

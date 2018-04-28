@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "debug": "^3.1.0",
-    "flv.js": "github:progre/flv.js#063c726a7cf0be21d233473c937da9cefe9d58b5",
+    "flv.js": "github:progre/flv.js#f055c4b09211169955b3ace579e1798882650393",
     "http-proxy": "^1.17.0",
     "i18next": "^11.2.3",
     "i18next-browser-languagedetector": "^2.2.0",

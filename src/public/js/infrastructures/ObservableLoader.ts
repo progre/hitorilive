@@ -1,4 +1,4 @@
-import flvJS, { MediaSegment } from 'flv.js';
+import flvJS, { Config, MediaSegment } from 'flv.js';
 import { Observable, Subscription } from 'rxjs';
 const { LoaderErrors, LoaderStatus } = flvJS;
 
@@ -6,12 +6,12 @@ export default class ObservableLoader extends flvJS.BaseLoader {
   private requestAbort = false;
   private receivedLength = 0;
   private subscription?: Subscription;
+  private observable: Observable<ArrayBuffer>;
 
-  constructor(
-    private observable: Observable<ArrayBuffer>,
-  ) {
+  constructor(seekHandler: any, config: Config) {
     super('observable-loader');
     this._needStash = true;
+    this.observable = config.customLoaderParameters.observable;
   }
 
   destroy() {
